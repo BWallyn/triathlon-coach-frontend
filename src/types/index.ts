@@ -3,7 +3,7 @@ export type ViewMode = 'B' | 'H' | 'T'
 export type Discipline = 'swim' | 'bike' | 'run'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
-export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach'
+export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante'
 
 export interface Athlete {
   id: AthleteId
@@ -61,4 +61,11 @@ export interface DashboardSummary {
   weekly_load: Record<AthleteId, Record<Discipline, number>>
   sleep: Record<AthleteId, Record<string, { duration_min: number; quality: number; deep_min?: number; rem_min?: number }>>
   feeling: Record<AthleteId, Record<string, { fatigue: number; motivation: number; soreness: number; note?: string }>>
+}
+
+export interface WeightLog {
+  id?: number
+  athlete_id: AthleteId
+  date: string
+  weight_kg: number
 }

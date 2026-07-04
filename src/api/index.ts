@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary } from '../types'
+import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog } from '../types'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 const api = axios.create({ baseURL: BASE })
@@ -40,3 +40,9 @@ export const logFeeling = (payload: Omit<FeelingLog, 'id'>) =>
   api.post<FeelingLog>('/wellness/feeling', payload).then(r => r.data)
 export const getFeeling = (params: { athlete_id?: string; date_start?: string; date_end?: string }) =>
   api.get<FeelingLog[]>('/wellness/feeling', { params }).then(r => r.data)
+
+export const logWeight = (payload: Omit<WeightLog, 'id'>) =>
+  api.post<WeightLog>('/wellness/weight', payload).then(r => r.data)
+export const getWeight = (params: { athlete_id?: string; date_start?: string; date_end?: string }) =>
+  api.get<WeightLog[]>('/wellness/weight', { params }).then(r => r.data)
+export const deleteWeight = (id: number) => api.delete(`/wellness/weight/${id}`)
