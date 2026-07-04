@@ -5,6 +5,7 @@ import DashboardPage from './components/dashboard/DashboardPage'
 import PlanningPage from './components/planning/PlanningPage'
 import NutritionPage from './components/nutrition/NutritionPage'
 import CoursesPage from './components/courses/CoursesPage'
+import SantePage from './components/health/SantePage'
 
 export default function App() {
   const activePage = useAppStore((s) => s.activePage)
@@ -16,6 +17,7 @@ export default function App() {
         {activePage === 'plan' && <PlanningPage />}
         {activePage === 'food' && <NutritionPage />}
         {activePage === 'courses' && <CoursesPage />}
+        {activePage === 'sante' && <SantePage />}
         <BottomNav />
       </div>
     </ToastProvider>

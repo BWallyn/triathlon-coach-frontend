@@ -44,7 +44,7 @@ export default function PlanningPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto px-3.5 pt-4 pb-24">
+    <div className="px-4 md:px-8 pt-6 pb-24 max-w-screen-xl mx-auto">
       <h1 className="text-[22px] font-bold tracking-tight mb-1">Planning</h1>
       <p className="text-[13px] text-[#6B7B6B] mb-4">{label}</p>
 
@@ -109,7 +109,7 @@ export default function PlanningPage() {
       )}
 
       {/* Days scroll */}
-      <div className="overflow-x-auto -mx-3.5 px-3.5">
+      <div className="overflow-x-auto -mx-4 md:-mx-8 px-4 md:px-8">
         <div className="flex gap-1.5 min-w-max">
           {dates.map((date, idx) => {
             const key = format(date, 'yyyy-MM-dd')

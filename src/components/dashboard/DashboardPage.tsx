@@ -29,24 +29,6 @@ const DISC_COLOR: Record<Discipline, string> = {
   swim: 'text-teal', bike: 'text-amber-sport', run: 'text-ocean',
 }
 
-// ── Small reusable components ─────────────────────────────────
-function KpiCard({ icon, label, value, sub, color = 'teal' }: {
-  icon: string; label: string; value: string | number; sub?: string; color?: string
-}) {
-  const border = color === 'teal' ? 'border-teal-mid' : color === 'violet' ? 'border-violet-mid' : 'border-amber-mid'
-  const bg = color === 'teal' ? 'bg-teal-light' : color === 'violet' ? 'bg-violet-light' : 'bg-amber-light'
-  const text = color === 'teal' ? 'text-teal' : color === 'violet' ? 'text-violet' : 'text-amber-sport'
-  return (
-    <div className={`rounded-card border ${border} ${bg} px-4 py-3`}>
-      <div className={`flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider mb-1 ${text}`}>
-        <i className={`ti ${icon} text-[14px]`} />{label}
-      </div>
-      <div className="text-[22px] font-bold text-[#1A1E1A] leading-tight">{value}</div>
-      {sub && <div className="text-[11px] text-[#6B7B6B] mt-0.5">{sub}</div>}
-    </div>
-  )
-}
-
 function ScoreBar({ value, max = 5, color }: { value: number; max?: number; color: string }) {
   return (
     <div className="flex gap-1">
@@ -235,7 +217,9 @@ export default function DashboardPage() {
   }
 
   const sleepB = avgSleep('B')
+  const sleepH = avgSleep('H')
   const feelingB = avgFeeling('B')
+  const feelingH = avgFeeling('H')
 
   return (
     <div className="px-4 md:px-8 pt-6 pb-24 max-w-screen-xl mx-auto">
@@ -256,12 +240,38 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <KpiCard icon="ti-flame" label="Charge Benji" value={`${totalLoad('B')}h`} sub="cette semaine" color="teal" />
-        <KpiCard icon="ti-flame" label="Charge Hélène" value={`${totalLoad('H')}h`} sub="cette semaine" color="violet" />
-        <KpiCard icon="ti-moon" label="Sommeil moy." value={sleepB ? `${sleepB.hours}h` : '—'} sub={sleepB ? `Qualité ${sleepB.quality}/5` : 'Aucune donnée'} color="teal" />
-        <KpiCard icon="ti-heart-rate-monitor" label="Ressenti moy." value={feelingB ? `${feelingB.motivation}/5` : '—'} sub="motivation Benji" color="amber" />
+      {/* KPI rows by athlete */}
+      <div className="flex flex-col gap-3 mb-6">
+        {([
+          { id: 'H' as AthleteId, name: 'Hélène', sleep: sleepH, feeling: feelingH, tone: 'violet' as const },
+          { id: 'B' as AthleteId, name: 'Benji', sleep: sleepB, feeling: feelingB, tone: 'violet' as const },
+        ]).map(({ id, name, sleep, feeling, tone }) => (
+          <div key={id} className="rounded-card border border-[#E4E8E4] bg-white p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className={`text-[14px] font-bold ${tone === 'teal' ? 'text-teal' : 'text-violet'}`}>{name}</p>
+              <span className="text-[10px] uppercase tracking-wider text-[#6B7B6B]">Cette semaine</span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+              <div className={`rounded-[10px] border px-3 py-2 ${tone === 'teal' ? 'bg-teal-light border-teal-mid' : 'bg-violet-light border-violet-mid'}`}>
+                <div className="text-[10px] uppercase tracking-wider text-[#6B7B6B] mb-0.5">Charge</div>
+                <div className="text-[20px] font-bold text-[#1A1E1A] leading-tight">{totalLoad(id)}h</div>
+              </div>
+              <div className="rounded-[10px] border border-teal-mid bg-teal-light px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wider text-[#6B7B6B] mb-0.5">Sommeil moy.</div>
+                <div className="text-[20px] font-bold text-[#1A1E1A] leading-tight">{sleep ? `${sleep.hours}h` : '—'}</div>
+              </div>
+              <div className="rounded-[10px] border border-amber-mid bg-amber-light px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wider text-[#6B7B6B] mb-0.5">Ressenti</div>
+                <div className="text-[20px] font-bold text-[#1A1E1A] leading-tight">{feeling ? `${feeling.fatigue}/5` : '—'}</div>
+              </div>
+              <div className="rounded-[10px] border border-ocean-mid bg-ocean-light px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wider text-[#6B7B6B] mb-0.5">Motivation</div>
+                <div className="text-[20px] font-bold text-[#1A1E1A] leading-tight">{feeling ? `${feeling.motivation}/5` : '—'}</div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Calendrier mensuel */}
