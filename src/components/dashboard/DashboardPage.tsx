@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useQuery } from 'react-query'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isToday, addMonths, subMonths } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { getSessions } from '../../api'
 import { useDashboard } from '../../hooks/useData'
 import { useWeek } from '../../hooks/useWeek'
 import { useAppStore } from '../../store'
 import { useToast } from '../shared/Toast'
-import type { AthleteId, Charge } from '../../types'
+import type { AthleteId, Charge, Discipline } from '../../types'
 
 // ── Palettes ──────────────────────────────────────────────────
 const CHARGE_COLOR: Record<Charge, string> = {
@@ -19,6 +21,12 @@ const CHARGE_DOT: Record<Charge, string> = {
 }
 const CHARGE_LABEL: Record<Charge, string> = {
   high: 'Élevée', med: 'Modérée', low: 'Légère', rest: 'Repos',
+}
+const DISC_ICON: Record<Discipline, string> = {
+  swim: 'ti-wave-sine', bike: 'ti-bike', run: 'ti-run',
+}
+const DISC_COLOR: Record<Discipline, string> = {
+  swim: 'text-teal', bike: 'text-amber-sport', run: 'text-ocean',
 }
 
 // ── Small reusable components ─────────────────────────────────
@@ -50,8 +58,8 @@ function ScoreBar({ value, max = 5, color }: { value: number; max?: number; colo
 }
 
 // ── Sleep & Feeling log modal ─────────────────────────────────
-function LogModal({ open, onClose, date, athleteId, onSaveSleep, onSaveFeeling, existing }: {
-  open: boolean; onClose: () => void; date: string; athleteId: AthleteId
+function LogModal({ open, onClose, date, onSaveSleep, onSaveFeeling, existing }: {
+  open: boolean; onClose: () => void; date: string
   onSaveSleep: (v: { duration_min: number; quality: number }) => void
   onSaveFeeling: (v: { fatigue: number; motivation: number; soreness: number; note?: string }) => void
   existing?: { sleep?: any; feeling?: any }
@@ -158,9 +166,9 @@ function LogModal({ open, onClose, date, athleteId, onSaveSleep, onSaveFeeling, 
 
 // ── Main Dashboard ────────────────────────────────────────────
 export default function DashboardPage() {
-  const { weekStart, weekEnd, dates, label } = useWeek()
+  const { dates, label } = useWeek()
   const { shiftWeek } = useAppStore()
-  const { summary, isLoading, sleepMutation, feelingMutation } = useDashboard()
+  const { summary, sleepMutation, feelingMutation } = useDashboard()
   const { showToast } = useToast()
   const { setActivePage } = useAppStore()
 
@@ -170,8 +178,31 @@ export default function DashboardPage() {
   // ── Calendar ───────────────────────────────────────────────
   const calStart = startOfMonth(calMonth)
   const calEnd = endOfMonth(calMonth)
+  const calStartKey = format(calStart, 'yyyy-MM-dd')
+  const calEndKey = format(calEnd, 'yyyy-MM-dd')
+  const todayKey = format(new Date(), 'yyyy-MM-dd')
   const calDays = eachDayOfInterval({ start: calStart, end: calEnd })
   const firstDow = (getDay(calStart) + 6) % 7 // Mon=0
+
+  const { data: monthSessions = [], isLoading: isMonthSessionsLoading } = useQuery(
+    ['dashboard-month-sessions', calStartKey, calEndKey],
+    () => getSessions(calStartKey, calEndKey),
+    { staleTime: 60_000 },
+  )
+
+  const monthSessionsByDay = useMemo(() => {
+    const base: Record<string, Record<AthleteId, Discipline[]>> = {}
+    monthSessions.forEach((s) => {
+      const athlete: AthleteId = s.athlete_id === 'B' ? 'B' : 'H'
+      if (!base[s.date]) {
+        base[s.date] = { B: [], H: [] }
+      }
+      if (!base[s.date][athlete].includes(s.discipline)) {
+        base[s.date][athlete].push(s.discipline)
+      }
+    })
+    return base
+  }, [monthSessions])
 
   const chargeForDay = (d: Date): Charge | null => {
     const key = format(d, 'yyyy-MM-dd')
@@ -203,8 +234,8 @@ export default function DashboardPage() {
     return (l.swim + l.bike + l.run).toFixed(1)
   }
 
-  const sleepB = avgSleep('B'); const sleepH = avgSleep('H')
-  const feelingB = avgFeeling('B'); const feelingH = avgFeeling('H')
+  const sleepB = avgSleep('B')
+  const feelingB = avgFeeling('B')
 
   return (
     <div className="px-4 md:px-8 pt-6 pb-24 max-w-screen-xl mx-auto">
@@ -231,6 +262,74 @@ export default function DashboardPage() {
         <KpiCard icon="ti-flame" label="Charge Hélène" value={`${totalLoad('H')}h`} sub="cette semaine" color="violet" />
         <KpiCard icon="ti-moon" label="Sommeil moy." value={sleepB ? `${sleepB.hours}h` : '—'} sub={sleepB ? `Qualité ${sleepB.quality}/5` : 'Aucune donnée'} color="teal" />
         <KpiCard icon="ti-heart-rate-monitor" label="Ressenti moy." value={feelingB ? `${feelingB.motivation}/5` : '—'} sub="motivation Benji" color="amber" />
+      </div>
+
+      {/* Calendrier mensuel */}
+      <div className="bg-white border border-[#E4E8E4] rounded-card p-5 md:p-6 mb-6">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-[24px] md:text-[30px] leading-none font-bold capitalize text-[#1A1E1A]">
+              {format(calMonth, 'MMMM yyyy', { locale: fr })}
+            </h2>
+            <p className="text-[11px] md:text-[12px] text-[#6B7B6B] mt-1.5">
+              Sports programmés (icônes atténuées à venir, pleines passées/du jour)
+            </p>
+          </div>
+          <div className="flex gap-1.5">
+            <button onClick={() => setCalMonth(subMonths(calMonth, 1))} className="w-8 h-8 rounded-[7px] border border-[#E4E8E4] bg-white flex items-center justify-center cursor-pointer text-[#6B7B6B]">
+              <i className="ti ti-chevron-left text-[14px]" />
+            </button>
+            <button onClick={() => setCalMonth(addMonths(calMonth, 1))} className="w-8 h-8 rounded-[7px] border border-[#E4E8E4] bg-white flex items-center justify-center cursor-pointer text-[#6B7B6B]">
+              <i className="ti ti-chevron-right text-[14px]" />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1.5 mb-1.5">
+          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+            <div key={i} className="text-[10px] md:text-[11px] text-[#A8B8A8] text-center font-semibold py-1 uppercase tracking-wider">{d}</div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1.5">
+          {Array.from({ length: firstDow }, (_, i) => <div key={`e${i}`} />)}
+          {calDays.map((d) => {
+            const key = format(d, 'yyyy-MM-dd')
+            const charge = chargeForDay(d)
+            const today = isToday(d)
+            const isDoneOrToday = key <= todayKey
+            const sessions = monthSessionsByDay[key] ?? { B: [], H: [] }
+
+            return (
+              <div key={d.toISOString()} className={`min-h-[88px] md:min-h-[98px] rounded-[8px] border p-1.5 md:p-2 flex flex-col gap-1 ${today ? 'ring-2 ring-teal ring-offset-0 border-teal-mid' : 'border-[#E4E8E4]'}`}
+                style={{ background: charge ? CHARGE_DOT[charge] + '18' : '#FAFBFA' }}>
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] md:text-[12px] font-bold ${today ? 'text-teal' : 'text-[#1A1E1A]'}`}>{format(d, 'd')}</span>
+                  {charge && charge !== 'rest' && (
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: CHARGE_DOT[charge] }} />
+                  )}
+                </div>
+
+                {(['B', 'H'] as AthleteId[]).map((athlete) => (
+                  <div key={athlete} className={`flex items-center gap-1 ${isDoneOrToday ? 'opacity-100' : 'opacity-55'}`}>
+                    <span className={`w-3.5 text-[9px] font-bold ${athlete === 'B' ? 'text-teal' : 'text-violet'}`}>{athlete}</span>
+                    <div className="flex items-center gap-0.5 overflow-hidden min-h-[12px]">
+                      {sessions[athlete].length ? sessions[athlete].map((disc) => (
+                        <i key={`${athlete}-${disc}`} className={`ti ${DISC_ICON[disc]} text-[11px] md:text-[12px] ${DISC_COLOR[disc]}`} />
+                      )) : (
+                        <span className="text-[10px] text-[#C3CCC3]">-</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+
+        {isMonthSessionsLoading && (
+          <p className="text-[11px] text-[#A8B8A8] mt-3">Chargement des séances du mois...</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -339,46 +438,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Colonne droite : calendrier + bien-être ────────── */}
+        {/* ── Colonne droite : bien-être + raccourcis ────────── */}
         <div className="flex flex-col gap-5">
-
-          {/* Calendrier mensuel */}
-          <div className="bg-white border border-[#E4E8E4] rounded-card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[15px] font-bold text-[#1A1E1A]">
-                {format(calMonth, 'MMMM yyyy', { locale: fr })}
-              </h2>
-              <div className="flex gap-1">
-                <button onClick={() => setCalMonth(subMonths(calMonth, 1))} className="w-7 h-7 rounded-[6px] border border-[#E4E8E4] bg-white flex items-center justify-center cursor-pointer text-[#6B7B6B]">
-                  <i className="ti ti-chevron-left text-[13px]" />
-                </button>
-                <button onClick={() => setCalMonth(addMonths(calMonth, 1))} className="w-7 h-7 rounded-[6px] border border-[#E4E8E4] bg-white flex items-center justify-center cursor-pointer text-[#6B7B6B]">
-                  <i className="ti ti-chevron-right text-[13px]" />
-                </button>
-              </div>
-            </div>
-            <div className="grid grid-cols-7 gap-1 mb-1">
-              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-                <div key={i} className="text-[10px] text-[#A8B8A8] text-center font-medium py-1">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {Array.from({ length: firstDow }, (_, i) => <div key={`e${i}`} />)}
-              {calDays.map(d => {
-                const charge = chargeForDay(d)
-                const today = isToday(d)
-                return (
-                  <div key={d.toISOString()} className={`relative aspect-square flex items-center justify-center rounded-[6px] text-[12px] font-medium ${today ? 'ring-2 ring-teal ring-offset-0' : ''} ${charge ? 'cursor-default' : ''}`}
-                    style={{ background: charge ? CHARGE_DOT[charge] + '22' : 'transparent' }}>
-                    <span className={today ? 'text-teal font-bold' : 'text-[#1A1E1A]'}>{format(d, 'd')}</span>
-                    {charge && charge !== 'rest' && (
-                      <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style={{ background: CHARGE_DOT[charge] }} />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
 
           {/* Bien-être de la semaine */}
           <div className="bg-white border border-[#E4E8E4] rounded-card p-5">
@@ -455,7 +516,6 @@ export default function DashboardPage() {
           open={!!logModal}
           onClose={() => setLogModal(null)}
           date={logModal.date}
-          athleteId={logModal.athleteId}
           existing={{
             sleep: summary?.sleep[logModal.athleteId][logModal.date],
             feeling: summary?.feeling[logModal.athleteId][logModal.date],
