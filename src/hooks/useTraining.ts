@@ -41,7 +41,7 @@ export function useTraining() {
     sessions.filter((s) => s.date === dateKey && s.athlete_id === athleteId)
 
   const loadCounts = (athleteId: 'B' | 'C') => {
-    const counts: Record<Discipline, number> = { swim: 0, bike: 0, run: 0 }
+    const counts: Record<Discipline, number> = { swim: 0, bike: 0, run: 0, strength: 0 }
     sessions
       .filter((s) => s.athlete_id === athleteId)
       .forEach((s) => { counts[s.discipline]++ })

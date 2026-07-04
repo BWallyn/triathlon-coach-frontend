@@ -23,10 +23,10 @@ const CHARGE_LABEL: Record<Charge, string> = {
   high: 'Élevée', med: 'Modérée', low: 'Légère', rest: 'Repos',
 }
 const DISC_ICON: Record<Discipline, string> = {
-  swim: 'ti-wave-sine', bike: 'ti-bike', run: 'ti-run',
+  swim: 'ti-wave-sine', bike: 'ti-bike', run: 'ti-run', strength: 'ti-barbell',
 }
 const DISC_COLOR: Record<Discipline, string> = {
-  swim: 'text-teal', bike: 'text-amber-sport', run: 'text-ocean',
+  swim: 'text-teal', bike: 'text-amber-sport', run: 'text-ocean', strength: 'text-violet',
 }
 
 function ScoreBar({ value, max = 5, color }: { value: number; max?: number; color: string }) {
@@ -213,7 +213,7 @@ export default function DashboardPage() {
   const totalLoad = (athleteId: AthleteId) => {
     const l = summary?.weekly_load[athleteId]
     if (!l) return 0
-    return (l.swim + l.bike + l.run).toFixed(1)
+    return (l.swim + l.bike + l.run + (l.strength ?? 0)).toFixed(1)
   }
 
   const sleepB = avgSleep('B')
@@ -244,7 +244,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-3 mb-6">
         {([
           { id: 'H' as AthleteId, name: 'Hélène', sleep: sleepH, feeling: feelingH, tone: 'violet' as const },
-          { id: 'B' as AthleteId, name: 'Benji', sleep: sleepB, feeling: feelingB, tone: 'violet' as const },
+          { id: 'B' as AthleteId, name: 'Benji', sleep: sleepB, feeling: feelingB, tone: 'teal' as const },
         ]).map(({ id, name, sleep, feeling, tone }) => (
           <div key={id} className="rounded-card border border-[#E4E8E4] bg-white p-4">
             <div className="flex items-center justify-between mb-3">
@@ -419,16 +419,22 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-4">
               {(['B', 'C'] as AthleteId[]).map(a => {
                 const load = summary?.weekly_load[a]
-                const total = load ? load.swim + load.bike + load.run : 0
+                const total = load ? load.swim + load.bike + load.run + (load.strength ?? 0) : 0
                 return (
                   <div key={a}>
                     <p className={`text-[12px] font-semibold mb-3 ${a === 'B' ? 'text-teal' : 'text-violet'}`}>
                       {a === 'B' ? 'Benji' : 'Hélène'}
                     </p>
-                    {(['swim', 'bike', 'run'] as const).map(disc => {
+                    {(['swim', 'bike', 'run', 'strength'] as const).map(disc => {
                       const h = load?.[disc] ?? 0
                       const pct = total > 0 ? (h / total) * 100 : 0
-                      const [bg, label] = disc === 'swim' ? ['bg-teal', 'Natation'] : disc === 'bike' ? ['bg-amber-sport', 'Vélo'] : ['bg-ocean', 'Run']
+                      const [bg, label] = disc === 'swim'
+                        ? ['bg-teal', 'Natation']
+                        : disc === 'bike'
+                          ? ['bg-amber-sport', 'Vélo']
+                          : disc === 'run'
+                            ? ['bg-ocean', 'Run']
+                            : ['bg-violet', 'Muscu']
                       return (
                         <div key={disc} className="mb-2.5">
                           <div className="flex justify-between text-[11px] mb-1">
