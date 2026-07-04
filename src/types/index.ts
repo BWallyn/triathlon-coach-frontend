@@ -1,6 +1,6 @@
 export type AthleteId = 'B' | 'H'
 export type ViewMode = 'B' | 'H' | 'T'
-export type Discipline = 'swim' | 'bike' | 'run'
+export type Discipline = 'swim' | 'bike' | 'run' | 'strength'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
 export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante'

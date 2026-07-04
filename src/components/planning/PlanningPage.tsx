@@ -8,8 +8,8 @@ import { useToast } from '../shared/Toast'
 import SessionModal from './SessionModal'
 import type { ViewMode, Discipline, AthleteId } from '../../types'
 
-const DISC_LABEL: Record<Discipline, string> = { swim: 'Natation', bike: 'Vélo', run: 'Run' }
-const DISC_ICON: Record<Discipline, string> = { swim: 'ti-wave-sine', bike: 'ti-bike', run: 'ti-run' }
+const DISC_LABEL: Record<Discipline, string> = { swim: 'Natation', bike: 'Vélo', run: 'Run', strength: 'Muscu' }
+const DISC_ICON: Record<Discipline, string> = { swim: 'ti-wave-sine', bike: 'ti-bike', run: 'ti-run', strength: 'ti-barbell' }
 const CHARGE_DOT: Record<string, string> = { high: '#BA7517', med: '#1D9E75', low: '#A8B8A8', rest: '#A32D2D' }
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
@@ -70,14 +70,14 @@ export default function PlanningPage() {
       </div>
 
       {/* Load bars */}
-      <div className="grid grid-cols-3 gap-1.5 mb-4">
-        {(['swim', 'bike', 'run'] as Discipline[]).map((disc) => {
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-4">
+        {(['swim', 'bike', 'run', 'strength'] as Discipline[]).map((disc) => {
           const nB = cB[disc]; const nC = cC[disc]
           const n = viewMode === 'T' ? null : viewMode === 'B' ? nB : nC
           const pctB = Math.min(nB / MAX, 1) * 100
           const pctC = Math.min(nC / MAX, 1) * 100
           const pct = viewMode === 'B' ? pctB : viewMode === 'C' ? pctC : pctB
-          const colorMap: Record<Discipline, string> = { swim: 'bg-teal', bike: 'bg-amber-sport', run: 'bg-ocean' }
+          const colorMap: Record<Discipline, string> = { swim: 'bg-teal', bike: 'bg-amber-sport', run: 'bg-ocean', strength: 'bg-violet' }
           return (
             <div key={disc} className="bg-white border border-[#E4E8E4] rounded-card p-2.5">
               <div className="flex items-center gap-1 text-[10px] text-[#6B7B6B] uppercase tracking-wider mb-1.5">
@@ -133,9 +133,11 @@ export default function PlanningPage() {
                   {sessions.map((s, i) => {
                     const discColor = s.discipline === 'swim' ? 'bg-teal-light border-[#B0E8D4]'
                       : s.discipline === 'bike' ? 'bg-amber-light border-[#F5D49A]'
-                      : 'bg-ocean-light border-[#BAD6F0]'
+                        : s.discipline === 'run' ? 'bg-ocean-light border-[#BAD6F0]'
+                          : 'bg-violet-light border-[#D6CEF8]'
                     const typeColor = s.discipline === 'swim' ? 'text-teal'
-                      : s.discipline === 'bike' ? 'text-amber-sport' : 'text-ocean'
+                      : s.discipline === 'bike' ? 'text-amber-sport'
+                        : s.discipline === 'run' ? 'text-ocean' : 'text-violet'
                     const stripe = viewMode === 'T'
                       ? (s.who === 'B' ? 'border-l-2 border-l-teal rounded-l-none' : 'border-l-2 border-l-violet rounded-l-none')
                       : ''
