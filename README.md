@@ -1,4 +1,4 @@
-# tricouple-frontend
+# Triathlon coach frontend
 
 Application React (Vite + TypeScript + Tailwind) pour TriCouple.
 
@@ -47,6 +47,6 @@ src/
 
 ## Fonctionnalités
 
-- **Planning** : vue semaine scrollable, onglets Benji / Copine / Ensemble, types de séances par discipline, barres de charge
+- **Planning** : vue semaine scrollable, onglets Benji / Hélène / Ensemble, types de séances par discipline, barres de charge
 - **Nutrition** : génération auto des repas selon la charge réelle du planning, édition manuelle
 - **Courses** : liste agrégée par catégorie, cochable, export vers Raccourcis Apple
