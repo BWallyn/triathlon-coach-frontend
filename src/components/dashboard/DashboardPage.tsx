@@ -313,9 +313,9 @@ export default function DashboardPage() {
                 {(['B', 'H'] as AthleteId[]).map((athlete) => (
                   <div key={athlete} className={`flex items-center gap-1 ${isDoneOrToday ? 'opacity-100' : 'opacity-55'}`}>
                     <span className={`w-3.5 text-[9px] font-bold ${athlete === 'B' ? 'text-teal' : 'text-violet'}`}>{athlete}</span>
-                    <div className="flex items-center gap-0.5 overflow-hidden min-h-[12px]">
+                    <div className="flex items-center gap-0.5 overflow-hidden min-h-[15px]">
                       {sessions[athlete].length ? sessions[athlete].map((disc) => (
-                        <i key={`${athlete}-${disc}`} className={`ti ${DISC_ICON[disc]} text-[11px] md:text-[12px] ${DISC_COLOR[disc]}`} />
+                        <i key={`${athlete}-${disc}`} className={`ti ${DISC_ICON[disc]} text-[13px] md:text-[15px] ${DISC_COLOR[disc]}`} />
                       )) : (
                         <span className="text-[10px] text-[#C3CCC3]">-</span>
                       )}
