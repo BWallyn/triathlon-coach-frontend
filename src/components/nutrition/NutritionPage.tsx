@@ -30,7 +30,7 @@ export default function NutritionPage() {
     setOpenDays((p) => { const s = new Set(p); s.has(key) ? s.delete(key) : s.add(key); return s })
 
   return (
-    <div className="max-w-lg mx-auto px-3.5 pt-4 pb-24">
+    <div className="px-4 md:px-8 pt-6 pb-24 max-w-screen-xl mx-auto">
       <h1 className="text-[22px] font-bold tracking-tight mb-1">Nutrition</h1>
       <p className="text-[13px] text-[#6B7B6B] mb-4">Repas adaptés à la charge d'entraînement</p>
 
