@@ -1,8 +1,9 @@
-export type AthleteId = 'B' | 'C'
-export type ViewMode = 'B' | 'C' | 'T'
+export type AthleteId = 'B' | 'H'
+export type ViewMode = 'B' | 'H' | 'T'
 export type Discipline = 'swim' | 'bike' | 'run'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
+export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach'
 
 export interface Athlete {
   id: AthleteId
@@ -12,7 +13,7 @@ export interface Athlete {
 export interface TrainingSession {
   id: number
   athlete_id: AthleteId
-  date: string // YYYY-MM-DD
+  date: string
   discipline: Discipline
   kind: string
   duration: string
@@ -32,12 +33,32 @@ export interface Meal {
   ingredients: Ingredient[]
 }
 
-export interface DayData {
-  date: Date
-  dateKey: string
-  sessionsB: TrainingSession[]
-  sessionsC: TrainingSession[]
-  charge: Charge
-  lunch?: Meal
-  dinner?: Meal
+export interface SleepLog {
+  id?: number
+  athlete_id: AthleteId
+  date: string
+  duration_min: number
+  quality: number       // 1-5
+  deep_min?: number
+  rem_min?: number
+  source?: string
+}
+
+export interface FeelingLog {
+  id?: number
+  athlete_id: AthleteId
+  date: string
+  fatigue: number       // 1-5
+  motivation: number    // 1-5
+  soreness: number      // 1-5
+  note?: string
+}
+
+export interface DashboardSummary {
+  week_start: string
+  week_end: string
+  day_charges: Record<string, Charge>
+  weekly_load: Record<AthleteId, Record<Discipline, number>>
+  sleep: Record<AthleteId, Record<string, { duration_min: number; quality: number; deep_min?: number; rem_min?: number }>>
+  feeling: Record<AthleteId, Record<string, { fatigue: number; motivation: number; soreness: number; note?: string }>>
 }

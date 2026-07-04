@@ -13,7 +13,7 @@ const DISC_ICON: Record<Discipline, string> = { swim: 'ti-wave-sine', bike: 'ti-
 const CHARGE_DOT: Record<string, string> = { high: '#BA7517', med: '#1D9E75', low: '#A8B8A8', rest: '#A32D2D' }
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
-const athleteNames: Record<AthleteId, string> = { B: 'Benji', C: 'Ma copine' }
+const athleteNames: Record<AthleteId, string> = { B: 'Benji', C: 'Hélène' }
 
 export default function PlanningPage() {
   const { viewMode, setViewMode } = useAppStore()
@@ -53,7 +53,7 @@ export default function PlanningPage() {
         {(['B', 'C', 'T'] as ViewMode[]).map((m) => (
           <button key={m} onClick={() => setViewMode(m)} className={tabCls(m)}>
             <i className={`ti ${m === 'T' ? 'ti-users' : 'ti-user'} text-[13px] align-[-1px] mr-1`} />
-            {m === 'B' ? 'Benji' : m === 'C' ? 'Ma copine' : 'Ensemble'}
+            {m === 'B' ? 'Benji' : m === 'C' ? 'Hélène' : 'Ensemble'}
           </button>
         ))}
       </div>
@@ -103,7 +103,7 @@ export default function PlanningPage() {
             <div className="w-2.5 h-2.5 rounded-full bg-teal" />Benji
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-[#6B7B6B]">
-            <div className="w-2.5 h-2.5 rounded-full bg-violet" />Ma copine
+            <div className="w-2.5 h-2.5 rounded-full bg-violet" />Hélène
           </div>
         </div>
       )}
@@ -149,7 +149,7 @@ export default function PlanningPage() {
                         <div className="text-[10px] text-[#A8B8A8]">{s.duration}</div>
                         {viewMode === 'T' && (
                           <div className={`text-[9px] font-semibold mt-0.5 ${ownerColor}`}>
-                            {s.who === 'B' ? 'Benji' : 'Copine'}
+                            {s.who === 'B' ? 'Benji' : 'Hélène'}
                           </div>
                         )}
                         {viewMode !== 'T' && (

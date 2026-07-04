@@ -1,20 +1,20 @@
 import { create } from 'zustand'
-import type { ViewMode } from '../types'
+import type { ViewMode, Page } from '../types'
 
 interface AppStore {
   weekOffset: number
   viewMode: ViewMode
-  activePage: 'plan' | 'food' | 'courses'
+  activePage: Page
   setWeekOffset: (offset: number) => void
   shiftWeek: (delta: number) => void
   setViewMode: (mode: ViewMode) => void
-  setActivePage: (page: 'plan' | 'food' | 'courses') => void
+  setActivePage: (page: Page) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
   weekOffset: 0,
   viewMode: 'B',
-  activePage: 'plan',
+  activePage: 'dashboard',
   setWeekOffset: (offset) => set({ weekOffset: offset }),
   shiftWeek: (delta) => set((s) => ({ weekOffset: s.weekOffset + delta })),
   setViewMode: (mode) => set({ viewMode: mode }),
