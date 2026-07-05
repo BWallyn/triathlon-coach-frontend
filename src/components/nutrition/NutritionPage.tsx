@@ -57,8 +57,8 @@ export default function NutritionPage() {
         {dates.map((date, idx) => {
           const key = format(date, 'yyyy-MM-dd')
           const sB = sessionsByDate(key, 'B')
-          const sC = sessionsByDate(key, 'C')
-          const charge = computeCharge(sB, sC)
+          const sH = sessionsByDate(key, 'H')
+          const charge = computeCharge(sB, sH)
           const lunch = mealFor(key, 'lunch')
           const dinner = mealFor(key, 'dinner')
           const isOpen = openDays.has(key)
