@@ -1,19 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query'
-import { format } from 'date-fns'
 import { getSessions, createSession, deleteSession } from '../api'
 import { useWeek } from './useWeek'
-import type { Discipline, Charge, TrainingSession } from '../types'
+import type { Discipline, Charge, TrainingSession, AthleteId } from '../types'
 
 const DUR_WEIGHT: Record<string, number> = {
   '30min': 0.5, '45min': 0.75, '1h': 1.0, '1h15': 1.25,
   '1h30': 1.5, '2h': 2.0, '2h30': 2.5, '3h+': 3.5,
 }
 
-export function computeCharge(sessionsB: TrainingSession[], sessionsC: TrainingSession[]): Charge {
-  if (!sessionsB.length && !sessionsC.length) return 'rest'
+export function computeCharge(sessionsB: TrainingSession[], sessionsH: TrainingSession[]): Charge {
+  if (!sessionsB.length && !sessionsH.length) return 'rest'
   const hB = sessionsB.reduce((s, x) => s + (DUR_WEIGHT[x.duration] ?? 1), 0)
-  const hC = sessionsC.reduce((s, x) => s + (DUR_WEIGHT[x.duration] ?? 1), 0)
-  const maxH = Math.max(hB, hC)
+  const hH = sessionsH.reduce((s, x) => s + (DUR_WEIGHT[x.duration] ?? 1), 0)
+  const maxH = Math.max(hB, hH)
   if (maxH >= 2) return 'high'
   if (maxH >= 1) return 'med'
   return 'low'
@@ -37,11 +36,11 @@ export function useTraining() {
     onSuccess: () => qc.invalidateQueries(['sessions']),
   })
 
-  const sessionsByDate = (dateKey: string, athleteId: 'B' | 'C') =>
+  const sessionsByDate = (dateKey: string, athleteId: AthleteId) =>
     sessions.filter((s) => s.date === dateKey && s.athlete_id === athleteId)
 
-  const loadCounts = (athleteId: 'B' | 'C') => {
-    const counts: Record<Discipline, number> = { swim: 0, bike: 0, run: 0, strength: 0 }
+  const loadCounts = (athleteId: AthleteId) => {
+    const counts: Record<Discipline, number> = { swim: 0, bike: 0, run: 0 }
     sessions
       .filter((s) => s.athlete_id === athleteId)
       .forEach((s) => { counts[s.discipline]++ })
