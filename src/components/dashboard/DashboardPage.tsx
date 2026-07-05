@@ -347,25 +347,37 @@ export default function DashboardPage() {
         {/* ── Colonne gauche : semaine + saisie ──────────────── */}
         <div className="lg:col-span-2 flex flex-col gap-5">
 
-          {/* Charge semaine par jour */}
+          {/* Charge semaine par jour, séparée par athlète */}
           <div className="bg-white border border-[#E4E8E4] rounded-card p-5">
             <h2 className="text-[15px] font-bold text-[#1A1E1A] mb-4">Charge d'entraînement</h2>
             <div className="grid grid-cols-7 gap-2">
               {dates.map((date) => {
                 const key = format(date, 'yyyy-MM-dd')
-                const charge = (summary?.day_charges[key] ?? 'rest') as Charge
+                const chargeB = (summary?.day_charges_by_athlete?.B?.[key] ?? 'rest') as Charge
+                const chargeH = (summary?.day_charges_by_athlete?.H?.[key] ?? 'rest') as Charge
                 const today = isToday(date)
                 return (
                   <div key={key} className="flex flex-col items-center gap-1.5">
                     <span className="text-[10px] text-[#A8B8A8] uppercase tracking-wider">
                       {format(date, 'EEE', { locale: fr })}
                     </span>
-                    <div className={`w-full aspect-square rounded-[8px] border flex items-center justify-center text-[11px] font-bold ${today ? 'ring-2 ring-teal ring-offset-1' : ''} ${CHARGE_COLOR[charge]}`}>
+                    <span className={`text-[11px] font-bold ${today ? 'text-teal' : 'text-[#1A1E1A]'}`}>
                       {format(date, 'd')}
-                    </div>
-                    <span className="text-[9px] text-center leading-tight text-[#A8B8A8]">
-                      {CHARGE_LABEL[charge]}
                     </span>
+                    <div className="flex gap-1 w-full">
+                      <div
+                        title={`Benji — ${CHARGE_LABEL[chargeB]}`}
+                        className={`flex-1 aspect-square rounded-[6px] border flex items-center justify-center text-[9px] font-bold ${today ? 'ring-1 ring-teal' : ''} ${CHARGE_COLOR[chargeB]}`}
+                      >
+                        B
+                      </div>
+                      <div
+                        title={`Hélène — ${CHARGE_LABEL[chargeH]}`}
+                        className={`flex-1 aspect-square rounded-[6px] border flex items-center justify-center text-[9px] font-bold ${today ? 'ring-1 ring-violet' : ''} ${CHARGE_COLOR[chargeH]}`}
+                      >
+                        H
+                      </div>
+                    </div>
                   </div>
                 )
               })}
@@ -417,7 +429,7 @@ export default function DashboardPage() {
           <div className="bg-white border border-[#E4E8E4] rounded-card p-5">
             <h2 className="text-[15px] font-bold text-[#1A1E1A] mb-4">Volume hebdomadaire</h2>
             <div className="grid grid-cols-2 gap-4">
-              {(['B', 'C'] as AthleteId[]).map(a => {
+              {(['B', 'H'] as AthleteId[]).map(a => {
                 const load = summary?.weekly_load[a]
                 const total = load ? load.swim + load.bike + load.run + (load.strength ?? 0) : 0
                 return (
@@ -460,7 +472,7 @@ export default function DashboardPage() {
           {/* Bien-être de la semaine */}
           <div className="bg-white border border-[#E4E8E4] rounded-card p-5">
             <h2 className="text-[15px] font-bold text-[#1A1E1A] mb-4">Bien-être</h2>
-            {(['B', 'C'] as AthleteId[]).map(a => {
+            {(['B', 'H'] as AthleteId[]).map(a => {
               const sleep = avgSleep(a)
               const feeling = avgFeeling(a)
               const color = a === 'B' ? 'text-teal' : 'text-violet'
