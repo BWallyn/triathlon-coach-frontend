@@ -26,12 +26,10 @@ const SESSION_TYPES: Record<Discipline, { id: string; label: string; desc: strin
     { id: 'recup', label: 'Récup', desc: 'Légère' },
   ],
   strength: [
-    { id: 'full-body', label: 'Full body', desc: 'Global' },
-    { id: 'haut', label: 'Haut du corps', desc: 'Push/Pull' },
-    { id: 'bas', label: 'Bas du corps', desc: 'Jambes' },
-    { id: 'core', label: 'Core', desc: 'Gainage' },
-    { id: 'plyo', label: 'Plyométrie', desc: 'Explosivité' },
-    { id: 'mobilite', label: 'Mobilité', desc: 'Prévention' },
+    { id: 'force', label: 'Force', desc: 'Charges lourdes' },
+    { id: 'hypertrophie', label: 'Hypertrophie', desc: 'Volume musculaire' },
+    { id: 'gainage', label: 'Gainage', desc: 'Core & stabilité' },
+    { id: 'explosivite', label: 'Explosivité', desc: 'Pliométrie' },
   ],
 }
 
@@ -75,7 +73,7 @@ export default function SessionModal({ open, onClose, dateKey, dateLabel, viewMo
         <div className="mb-4">
           <p className="text-[12px] text-[#6B7B6B] font-medium mb-2">Pour qui ?</p>
           <div className="grid grid-cols-2 gap-2">
-            {(['B', 'C'] as AthleteId[]).map((a) => (
+            {(['B', 'H'] as AthleteId[]).map((a) => (
               <button key={a} onClick={() => setWho(a)}
                 className={`${optBase} ${who === a ? 'bg-violet-light text-violet border-violet-mid' : ''}`}>
                 <i className="ti ti-user text-[14px]" /><br />{athleteNames[a]}
@@ -87,19 +85,16 @@ export default function SessionModal({ open, onClose, dateKey, dateLabel, viewMo
 
       <div className="mb-4">
         <p className="text-[12px] text-[#6B7B6B] font-medium mb-2">Discipline</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           {(['swim', 'bike', 'run', 'strength'] as Discipline[]).map((d) => {
             const icon = d === 'swim' ? 'ti-wave-sine' : d === 'bike' ? 'ti-bike' : d === 'run' ? 'ti-run' : 'ti-barbell'
-            const label = d === 'swim' ? 'Natation' : d === 'bike' ? 'Vélo' : d === 'run' ? 'Run' : 'Musculation'
+            const label = d === 'swim' ? 'Natation' : d === 'bike' ? 'Vélo' : d === 'run' ? 'Run' : 'Muscu'
             const sel = disc === d
             const cls = sel
-              ? (d === 'swim'
-                  ? 'bg-teal-light text-teal border-teal-mid'
-                  : d === 'bike'
-                    ? 'bg-amber-light text-amber-sport border-amber-mid'
-                    : d === 'run'
-                      ? 'bg-ocean-light text-ocean border-ocean-mid'
-                      : 'bg-violet-light text-violet border-violet-mid')
+              ? (d === 'swim' ? 'bg-teal-light text-teal border-teal-mid'
+                : d === 'bike' ? 'bg-amber-light text-amber-sport border-amber-mid'
+                : d === 'run' ? 'bg-ocean-light text-ocean border-ocean-mid'
+                : 'bg-violet-light text-violet border-violet-mid')
               : ''
             return (
               <button key={d} onClick={() => { setDisc(d); setKind(null) }}
