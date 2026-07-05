@@ -58,6 +58,7 @@ export interface DashboardSummary {
   week_start: string
   week_end: string
   day_charges: Record<string, Charge>
+  day_charges_by_athlete: Record<AthleteId, Record<string, Charge>>
   weekly_load: Record<AthleteId, Record<Discipline, number>>
   sleep: Record<AthleteId, Record<string, { duration_min: number; quality: number; deep_min?: number; rem_min?: number }>>
   feeling: Record<AthleteId, Record<string, { fatigue: number; motivation: number; soreness: number; note?: string }>>
