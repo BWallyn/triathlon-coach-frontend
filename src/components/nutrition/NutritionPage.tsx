@@ -7,6 +7,7 @@ import { useTraining, computeCharge } from '../../hooks/useTraining'
 import { useToast } from '../shared/Toast'
 import MealModal from './MealModal'
 import type { Meal, Charge } from '../../types'
+import BatchCookingModal from './BatchCookingModal'
 
 const CHARGE_LABEL: Record<Charge, string> = { high: 'Charge élevée', med: 'Charge modérée', low: 'Charge légère', rest: 'Repos' }
 const CHARGE_CLS: Record<Charge, string> = {
@@ -25,6 +26,7 @@ export default function NutritionPage() {
   const { showToast } = useToast()
   const [openDays, setOpenDays] = useState<Set<string>>(new Set())
   const [editCtx, setEditCtx] = useState<{ dateKey: string; slot: 'lunch' | 'dinner'; meal?: Meal; label: string } | null>(null)
+  const [batchModalOpen, setBatchModalOpen] = useState(false)
 
   const toggle = (key: string) =>
     setOpenDays((p) => { const s = new Set(p); s.has(key) ? s.delete(key) : s.add(key); return s })
@@ -51,6 +53,12 @@ export default function NutritionPage() {
         {generateMutation.isLoading
           ? <><span className="inline-block w-3.5 h-3.5 border-2 border-teal-mid border-t-teal rounded-full animate-spin" /> Calcul de la charge…</>
           : <><i className="ti ti-sparkles text-[15px]" />Générer les repas selon la charge</>}
+      </button>
+      <button
+        onClick={() => setBatchModalOpen(true)}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-card border border-violet-mid bg-violet-light text-violet text-[13px] font-semibold mb-4"
+      >
+        <i className="ti ti-cooker text-[15px]" />Batch cooking
       </button>
 
       <div className="flex flex-col gap-2">
@@ -88,8 +96,20 @@ export default function NutritionPage() {
                       <div key={slot} className="flex items-center gap-2 py-2 border-t border-[#F4F6F4]">
                         <span className="text-[11px] text-[#A8B8A8] uppercase tracking-wider font-medium w-14 flex-shrink-0">{slotLabel}</span>
                         {meal
-                          ? <span className="flex-1 text-[13px] text-[#1A1E1A]">{meal.name}<span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-ocean-light text-ocean">{meal.ingredients.length} ingr.</span></span>
-                          : <span className="flex-1 text-[13px] text-[#A8B8A8] italic">Non planifié</span>}
+                            ? (
+                                <span className="flex-1 text-[13px] text-[#1A1E1A]">
+                                {meal.name}
+                                {meal.batch_plan_id
+                                    ? <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-violet-light text-violet">🍲 Batch</span>
+                                    : <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-ocean-light text-ocean">{meal.ingredients.length} ingr.</span>}
+                                {meal.portions && meal.portions.length > 0 && (
+                                    <span className="block text-[11px] text-[#6B7B6B] mt-0.5">
+                                    {meal.portions.map((p, i) => `P${i + 1}: ${p.kcal}kcal / ${p.protein_g}g prot`).join(' · ')}
+                                    </span>
+                                )}
+                                </span>
+                            )
+                            : <span className="flex-1 text-[13px] text-[#A8B8A8] italic">Non planifié</span>}
                         <button
                           onClick={() => setEditCtx({ dateKey: key, slot, meal, label: dayLabel })}
                           className="text-[#A8B8A8] hover:text-[#6B7B6B] text-[14px] bg-none border-none cursor-pointer p-1"
@@ -117,6 +137,12 @@ export default function NutritionPage() {
           onSave={(payload) => {
             saveMutation.mutate(payload, { onSuccess: () => showToast('Repas enregistré') })
           }}
+        />
+      ) && (
+        <BatchCookingModal
+            open={batchModalOpen}
+            onClose={() => setBatchModalOpen(false)}
+            onDone={() => showToast('Plan batch cooking créé')}
         />
       )}
     </div>

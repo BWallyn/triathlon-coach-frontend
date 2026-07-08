@@ -46,3 +46,12 @@ export const logWeight = (payload: Omit<WeightLog, 'id'>) =>
 export const getWeight = (params: { athlete_id?: string; date_start?: string; date_end?: string }) =>
   api.get<WeightLog[]>('/wellness/weight', { params }).then(r => r.data)
 export const deleteWeight = (id: number) => api.delete(`/wellness/weight/${id}`)
+
+import type { BatchRecipe, BatchCookingPlan, PortionAssignment } from '../types'
+
+// ── Batch cooking ────────────────────────────────────────────
+export const getBatchRecipes = () =>
+  api.get<BatchRecipe[]>('/batch-cooking/recipes').then(r => r.data)
+
+export const createBatchPlan = (payload: { recipe_id: number; created_date: string; portions: PortionAssignment[] }) =>
+  api.post<BatchCookingPlan>('/batch-cooking/plans', payload).then(r => r.data)
