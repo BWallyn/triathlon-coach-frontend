@@ -4,6 +4,10 @@ export type Discipline = 'swim' | 'bike' | 'run' | 'strength'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
 export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante'
+export type Preset =
+  | 'reduction_agressive' | 'reduction_moderee' | 'reduction_legere'
+  | 'maintien'
+  | 'masse_legere' | 'masse_moderee' | 'masse_agressive'
 
 export interface Athlete {
   id: AthleteId
@@ -31,6 +35,8 @@ export interface Meal {
   slot: Slot
   name: string
   ingredients: Ingredient[]
+  batch_plan_id?: number | null
+  portions?: MealPortion[]
 }
 
 export interface SleepLog {
@@ -69,4 +75,42 @@ export interface WeightLog {
   athlete_id: AthleteId
   date: string
   weight_kg: number
+}
+
+export interface BatchRecipeIngredient {
+  id: number
+  ingredient_name: string
+  quantity_per_serving: number
+  unit: string
+  is_scalable: boolean
+  unit_weight_g?: number
+}
+
+export interface BatchRecipe {
+  id: number
+  name: string
+  instructions?: string
+  ingredients: BatchRecipeIngredient[]
+}
+
+export interface PortionAssignment {
+  date: string
+  slot: Slot
+  preset: Preset
+}
+
+export interface MealPortion {
+  id: number
+  preset: Preset
+  kcal: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+}
+
+export interface BatchCookingPlan {
+  id: number
+  recipe_id: number
+  created_date: string
+  meals: (Meal & { portions: MealPortion[] })[]
 }
