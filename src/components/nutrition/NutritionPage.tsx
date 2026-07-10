@@ -138,13 +138,13 @@ export default function NutritionPage() {
             saveMutation.mutate(payload, { onSuccess: () => showToast('Repas enregistré') })
           }}
         />
-      ) && (
-        <BatchCookingModal
-            open={batchModalOpen}
-            onClose={() => setBatchModalOpen(false)}
-            onDone={() => showToast('Plan batch cooking créé')}
-        />
       )}
+
+      <BatchCookingModal
+        open={batchModalOpen}
+        onClose={() => setBatchModalOpen(false)}
+        onDone={() => showToast('Plan batch cooking créé')}
+      />
     </div>
   )
 }

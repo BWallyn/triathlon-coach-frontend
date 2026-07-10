@@ -6,6 +6,7 @@ import { getSessions } from '../../api'
 import { useDashboard } from '../../hooks/useData'
 import { useWeek } from '../../hooks/useWeek'
 import { useAppStore } from '../../store'
+import { useAthletes } from '../../hooks/useAthletes'
 import { useToast } from '../shared/Toast'
 import type { AthleteId, Charge, Discipline } from '../../types'
 
@@ -148,6 +149,7 @@ function LogModal({ open, onClose, date, onSaveSleep, onSaveFeeling, existing }:
 
 // ── Main Dashboard ────────────────────────────────────────────
 export default function DashboardPage() {
+  const { athleteNames } = useAthletes()
   const { dates, label } = useWeek()
   const { shiftWeek } = useAppStore()
   const { summary, sleepMutation, feelingMutation } = useDashboard()
@@ -243,8 +245,8 @@ export default function DashboardPage() {
       {/* KPI rows by athlete */}
       <div className="flex flex-col gap-3 mb-6">
         {([
-          { id: 'H' as AthleteId, name: 'Hélène', sleep: sleepH, feeling: feelingH, tone: 'violet' as const },
-          { id: 'B' as AthleteId, name: 'Benji', sleep: sleepB, feeling: feelingB, tone: 'teal' as const },
+          { id: 'H' as AthleteId, name: athleteNames.H, sleep: sleepH, feeling: feelingH, tone: 'violet' as const },
+          { id: 'B' as AthleteId, name: athleteNames.B, sleep: sleepB, feeling: feelingB, tone: 'teal' as const },
         ]).map(({ id, name, sleep, feeling, tone }) => (
           <div key={id} className="rounded-card border border-[#E4E8E4] bg-white p-4">
             <div className="flex items-center justify-between mb-3">
@@ -366,13 +368,13 @@ export default function DashboardPage() {
                     </span>
                     <div className="flex gap-1 w-full">
                       <div
-                        title={`Benji — ${CHARGE_LABEL[chargeB]}`}
+                        title={`${athleteNames.B} — ${CHARGE_LABEL[chargeB]}`}
                         className={`flex-1 aspect-square rounded-[6px] border flex items-center justify-center text-[9px] font-bold ${today ? 'ring-1 ring-teal' : ''} ${CHARGE_COLOR[chargeB]}`}
                       >
                         B
                       </div>
                       <div
-                        title={`Hélène — ${CHARGE_LABEL[chargeH]}`}
+                        title={`${athleteNames.H} — ${CHARGE_LABEL[chargeH]}`}
                         className={`flex-1 aspect-square rounded-[6px] border flex items-center justify-center text-[9px] font-bold ${today ? 'ring-1 ring-violet' : ''} ${CHARGE_COLOR[chargeH]}`}
                       >
                         H
@@ -435,7 +437,7 @@ export default function DashboardPage() {
                 return (
                   <div key={a}>
                     <p className={`text-[12px] font-semibold mb-3 ${a === 'B' ? 'text-teal' : 'text-violet'}`}>
-                      {a === 'B' ? 'Benji' : 'Hélène'}
+                      {athleteNames[a]}
                     </p>
                     {(['swim', 'bike', 'run', 'strength'] as const).map(disc => {
                       const h = load?.[disc] ?? 0
@@ -480,7 +482,7 @@ export default function DashboardPage() {
               return (
                 <div key={a} className={`mb-4 ${a === 'H' ? 'pt-4 border-t border-[#F4F6F4]' : ''}`}>
                   <p className={`text-[12px] font-semibold mb-3 ${color}`}>
-                    {a === 'B' ? 'Benji' : 'Hélène'}
+                    {athleteNames[a]}
                   </p>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
                     <div>

@@ -4,18 +4,18 @@ import { fr } from 'date-fns/locale'
 import { useAppStore } from '../../store'
 import { useWeek } from '../../hooks/useWeek'
 import { useTraining, computeCharge } from '../../hooks/useTraining'
+import { useAthletes } from '../../hooks/useAthletes'
 import { useToast } from '../shared/Toast'
 import SessionModal from './SessionModal'
-import type { ViewMode, Discipline, AthleteId } from '../../types'
+import type { ViewMode, Discipline } from '../../types'
 
 const DISC_LABEL: Record<Discipline, string> = { swim: 'Natation', bike: 'Vélo', run: 'Run', strength: 'Muscu' }
 const DISC_ICON: Record<Discipline, string> = { swim: 'ti-wave-sine', bike: 'ti-bike', run: 'ti-run', strength: 'ti-barbell' }
 const CHARGE_DOT: Record<string, string> = { high: '#BA7517', med: '#1D9E75', low: '#A8B8A8', rest: '#A32D2D' }
 const DAYS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
-const athleteNames: Record<AthleteId, string> = { B: 'Benji', H: 'Hélène' }
-
 export default function PlanningPage() {
+  const { athleteNames } = useAthletes()
   const { viewMode, setViewMode } = useAppStore()
   const { shiftWeek } = useAppStore()
   const { dates, label } = useWeek()
@@ -52,7 +52,7 @@ export default function PlanningPage() {
         {(['B', 'H', 'T'] as ViewMode[]).map((m) => (
           <button key={m} onClick={() => setViewMode(m)} className={tabCls(m)}>
             <i className={`ti ${m === 'T' ? 'ti-users' : 'ti-user'} text-[13px] align-[-1px] mr-1`} />
-            {m === 'B' ? 'Benji' : m === 'H' ? 'Hélène' : 'Ensemble'}
+            {m === 'T' ? 'Ensemble' : athleteNames[m]}
           </button>
         ))}
       </div>
@@ -96,10 +96,10 @@ export default function PlanningPage() {
       {viewMode === 'T' && (
         <div className="flex gap-3 mb-4 flex-wrap">
           <div className="flex items-center gap-1.5 text-[11px] text-[#6B7B6B]">
-            <div className="w-2.5 h-2.5 rounded-full bg-teal" />Benji
+            <div className="w-2.5 h-2.5 rounded-full bg-teal" />{athleteNames.B}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-[#6B7B6B]">
-            <div className="w-2.5 h-2.5 rounded-full bg-violet" />Hélène
+            <div className="w-2.5 h-2.5 rounded-full bg-violet" />{athleteNames.H}
           </div>
         </div>
       )}
@@ -146,7 +146,7 @@ export default function PlanningPage() {
                         <div className="text-[10px] text-[#A8B8A8]">{s.duration}</div>
                         {viewMode === 'T' && (
                           <div className={`text-[9px] font-semibold mt-0.5 ${ownerColor}`}>
-                            {s.who === 'B' ? 'Benji' : 'Hélène'}
+                            {athleteNames[s.who]}
                           </div>
                         )}
                         {viewMode !== 'T' && (
