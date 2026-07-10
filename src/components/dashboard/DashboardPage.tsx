@@ -229,7 +229,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[26px] font-bold tracking-tight text-[#1A1E1A]">Dashboard</h1>
-          <p className="text-[14px] text-[#6B7B6B]">Vue couple — semaine en cours</p>
+          <p className="text-[14px] text-[#6B7B6B]">Résumé — semaine en cours</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => shiftWeek(-1)} className="w-8 h-8 rounded-[7px] border border-[#E4E8E4] bg-white flex items-center justify-center text-[#6B7B6B] cursor-pointer">
