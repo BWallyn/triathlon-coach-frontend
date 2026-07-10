@@ -5,6 +5,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts'
 import { useHealth, type HealthRange } from '../../hooks/useHealth'
+import { useAthletes } from '../../hooks/useAthletes'
 import { useToast } from '../shared/Toast'
 import type { AthleteId } from '../../types'
 
@@ -14,8 +15,6 @@ const RANGE_OPTIONS: { id: HealthRange; label: string }[] = [
   { id: '6m', label: '6 mois' },
   { id: '1y', label: '1 an' },
 ]
-
-const athleteNames: Record<AthleteId, string> = { B: 'Benji', H: 'Hélène' }
 
 function ChartCard({ title, children, empty }: { title: string; children: React.ReactNode; empty: boolean }) {
   return (
@@ -31,6 +30,7 @@ function ChartCard({ title, children, empty }: { title: string; children: React.
 }
 
 export default function SantePage() {
+  const { athleteNames } = useAthletes()
   const [athleteId, setAthleteId] = useState<AthleteId>('B')
   const [range, setRange] = useState<HealthRange>('3m')
   const { sleep, feeling, weight, addWeightMutation, removeWeightMutation } = useHealth(athleteId, range)
