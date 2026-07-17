@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipeIngredient, Season } from '../types'
+import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipe, BatchRecipeIngredient, BatchCookingPlan, PortionAssignment, Season } from '../types'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 const api = axios.create({ baseURL: BASE })
@@ -47,8 +47,6 @@ export const getWeight = (params: { athlete_id?: string; date_start?: string; da
   api.get<WeightLog[]>('/wellness/weight', { params }).then(r => r.data)
 export const deleteWeight = (id: number) => api.delete(`/wellness/weight/${id}`)
 
-import type { BatchRecipe, BatchCookingPlan, PortionAssignment } from '../types'
-
 // ── Batch cooking ────────────────────────────────────────────
 export const getBatchRecipes = (season?: Season | 'all') =>
   api.get<BatchRecipe[]>('/batch-cooking/recipes', {
@@ -61,8 +59,28 @@ export const createBatchRecipe = (payload: {
   base_portions: number
   season: Season | null
   recipe_link?: string
+  ref_kcal?: number
+  ref_protein_g?: number
+  ref_carbs_g?: number
+  ref_fat_g?: number
   ingredients: Omit<BatchRecipeIngredient, 'id'>[]
 }) => api.post<BatchRecipe>('/batch-cooking/recipes', payload).then(r => r.data)
+
+export const updateBatchRecipe = (id: number, payload: {
+  name: string
+  instructions?: string
+  base_portions: number
+  season: Season | null
+  recipe_link?: string
+  ref_kcal?: number
+  ref_protein_g?: number
+  ref_carbs_g?: number
+  ref_fat_g?: number
+  ingredients: Omit<BatchRecipeIngredient, 'id'>[]
+}) => api.put<BatchRecipe>(`/batch-cooking/recipes/${id}`, payload).then(r => r.data)
+
+export const deleteBatchRecipe = (id: number) =>
+  api.delete(`/batch-cooking/recipes/${id}`)
 
 export const createBatchPlan = (payload: { recipe_id: number; created_date: string; portions: PortionAssignment[] }) =>
   api.post<BatchCookingPlan>('/batch-cooking/plans', payload).then(r => r.data)

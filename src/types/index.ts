@@ -95,6 +95,10 @@ export interface BatchRecipe {
   base_portions: number
   season: Season | null
   recipe_link?: string
+  ref_kcal?: number
+  ref_protein_g?: number
+  ref_carbs_g?: number
+  ref_fat_g?: number
   ingredients: BatchRecipeIngredient[]
 }
 
