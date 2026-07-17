@@ -4,6 +4,7 @@ import { fr } from 'date-fns/locale'
 import Modal from '../shared/Modal'
 import { useWeek } from '../../hooks/useWeek'
 import { useBatchCooking } from '../../hooks/useBatchCooking'
+import { SEASON_LABELS } from '../../utils/season'
 import type { Preset, Slot } from '../../types'
 
 const PRESET_OPTIONS: { id: Preset; label: string }[] = [
@@ -16,71 +17,53 @@ const PRESET_OPTIONS: { id: Preset; label: string }[] = [
   { id: 'masse_agressive', label: 'Prise de masse agressive (+30%)' },
 ]
 
-interface SlotState {
-  portions: number
-  presets: Preset[]
-}
+interface PortionSlot { date: string; slot: Slot; preset: Preset }
 
-interface Props {
-  open: boolean
-  onClose: () => void
-  onDone: () => void
-}
+interface Props { open: boolean; onClose: () => void; onDone: () => void }
 
 export default function BatchCookingModal({ open, onClose, onDone }: Props) {
   const { dates } = useWeek()
-  const { recipes, recipesLoading, createPlanMutation } = useBatchCooking()
+  const { recipes, recipesLoading, seasonFilter, setSeasonFilter, createPlanMutation } = useBatchCooking()
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [recipeId, setRecipeId] = useState<number | null>(null)
-  const [slots, setSlots] = useState<Record<string, SlotState>>({})
+  const [assignments, setAssignments] = useState<PortionSlot[]>([])
 
-  const reset = () => { setStep(1); setRecipeId(null); setSlots({}) }
+  const recipe = recipes.find((r) => r.id === recipeId)
+  const totalPortions = recipe?.base_portions ?? 0
+  const remaining = totalPortions - assignments.length
+
+  const reset = () => { setStep(1); setRecipeId(null); setAssignments([]) }
   const handleClose = () => { reset(); onClose() }
 
-  const slotKey = (dateKey: string, slot: Slot) => `${dateKey}|${slot}`
+  const countFor = (dateKey: string, slot: Slot) =>
+    assignments.filter((a) => a.date === dateKey && a.slot === slot).length
 
-  const toggleSlot = (dateKey: string, slot: Slot) => {
-    const key = slotKey(dateKey, slot)
-    setSlots((prev) => {
-      const next = { ...prev }
-      if (next[key]) delete next[key]
-      else next[key] = { portions: 1, presets: ['maintien'] }
-      return next
+  const addPortion = (dateKey: string, slot: Slot) => {
+    if (remaining <= 0) return
+    setAssignments((p) => [...p, { date: dateKey, slot, preset: 'maintien' }])
+  }
+
+  const removeOnePortion = (dateKey: string, slot: Slot) => {
+    setAssignments((p) => {
+      const idx = [...p].reverse().findIndex((a) => a.date === dateKey && a.slot === slot)
+      if (idx === -1) return p
+      const realIdx = p.length - 1 - idx
+      return p.filter((_, i) => i !== realIdx)
     })
   }
 
-  const setPortionCount = (key: string, count: 1 | 2) => {
-    setSlots((prev) => {
-      const current = prev[key]
-      const presets = Array.from({ length: count }, (_, i) => current.presets[i] ?? 'maintien')
-      return { ...prev, [key]: { portions: count, presets } }
-    })
-  }
+  const setPresetAt = (index: number, preset: Preset) =>
+    setAssignments((p) => p.map((a, i) => i === index ? { ...a, preset } : a))
 
-  const setPreset = (key: string, index: number, preset: Preset) => {
-    setSlots((prev) => {
-      const current = prev[key]
-      const presets = [...current.presets]
-      presets[index] = preset
-      return { ...prev, [key]: { ...current, presets } }
-    })
-  }
-
-  const selectedCount = Object.keys(slots).length
   const canGoStep2 = recipeId !== null
-  const canGoStep3 = selectedCount > 0
-  const canSubmit = selectedCount > 0 && Object.values(slots).every((s) => s.presets.every(Boolean))
+  const canGoStep3 = totalPortions > 0 && remaining === 0
+  const canSubmit = totalPortions > 0 && remaining === 0
 
   const handleSubmit = () => {
     if (!recipeId) return
-    const portions = Object.entries(slots).flatMap(([key, s]) => {
-      const [date, slot] = key.split('|') as [string, Slot]
-      return s.presets.map((preset) => ({ date, slot, preset }))
-    })
-
     createPlanMutation.mutate(
-      { recipe_id: recipeId, created_date: format(new Date(), 'yyyy-MM-dd'), portions },
+      { recipe_id: recipeId, created_date: format(new Date(), 'yyyy-MM-dd'), portions: assignments },
       { onSuccess: () => { handleClose(); onDone() } },
     )
   }
@@ -91,17 +74,28 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
     <Modal open={open} onClose={handleClose} title="Batch cooking">
       {step === 1 && (
         <>
+          <div className="flex gap-1.5 mb-3 flex-wrap">
+            {(['all', 'spring', 'summer', 'autumn', 'winter'] as const).map((s) => (
+              <button key={s} onClick={() => setSeasonFilter(s)}
+                className={`px-2.5 py-1 rounded-full border text-[11px] font-medium cursor-pointer ${seasonFilter === s ? 'bg-teal text-white border-teal' : 'bg-white text-[#6B7B6B] border-[#E4E8E4]'}`}>
+                {s === 'all' ? 'Toutes saisons' : SEASON_LABELS[s]}
+              </button>
+            ))}
+          </div>
           <p className="text-[12px] text-[#6B7B6B] mb-3">Choisis une recette à cuisiner en grande quantité.</p>
           {recipesLoading && <p className="text-[13px] text-[#A8B8A8]">Chargement…</p>}
           <div className="flex flex-col gap-2 mb-4">
             {recipes.map((r) => (
               <button key={r.id} onClick={() => setRecipeId(r.id)}
                 className={`${optBase} ${recipeId === r.id ? 'bg-teal-light text-teal border-teal-mid' : ''}`}>
-                {r.name}
+                <div className="flex justify-between items-center">
+                  <span>{r.name}</span>
+                  <span className="text-[10px] text-[#A8B8A8]">{r.base_portions} portions</span>
+                </div>
               </button>
             ))}
             {!recipesLoading && !recipes.length && (
-              <p className="text-[12px] text-[#A8B8A8] italic">Aucune recette batch pour l'instant.</p>
+              <p className="text-[12px] text-[#A8B8A8] italic">Aucune recette batch pour cette saison.</p>
             )}
           </div>
           <button onClick={() => setStep(2)} disabled={!canGoStep2}
@@ -113,7 +107,12 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
 
       {step === 2 && (
         <>
-          <p className="text-[12px] text-[#6B7B6B] mb-3">Sélectionne les créneaux et le nombre de portions par créneau.</p>
+          <p className="text-[12px] text-[#6B7B6B] mb-1">
+            Cette recette donne <b>{totalPortions}</b> portions. Répartis-les sur les créneaux.
+          </p>
+          <p className={`text-[12px] font-semibold mb-3 ${remaining === 0 ? 'text-teal' : 'text-[#BA7517]'}`}>
+            {remaining === 0 ? 'Toutes les portions sont assignées ✓' : `${remaining} portion${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}`}
+          </p>
           <div className="flex flex-col gap-2 mb-4">
             {dates.map((date) => {
               const dateKey = format(date, 'yyyy-MM-dd')
@@ -123,24 +122,17 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
                   <p className="text-[12px] font-semibold text-[#1A1E1A] mb-2 capitalize">{dayLabel}</p>
                   <div className="grid grid-cols-2 gap-2">
                     {(['lunch', 'dinner'] as Slot[]).map((slot) => {
-                      const key = slotKey(dateKey, slot)
-                      const active = !!slots[key]
+                      const count = countFor(dateKey, slot)
                       return (
-                        <div key={slot}>
-                          <button onClick={() => toggleSlot(dateKey, slot)}
-                            className={`${optBase} text-center ${active ? 'bg-teal-light text-teal border-teal-mid' : ''}`}>
-                            {slot === 'lunch' ? 'Déjeuner' : 'Dîner'}
-                          </button>
-                          {active && (
-                            <div className="flex gap-1.5 mt-1.5">
-                              {[1, 2].map((n) => (
-                                <button key={n} onClick={() => setPortionCount(key, n as 1 | 2)}
-                                  className={`flex-1 py-1.5 rounded-[6px] border text-[11px] font-semibold cursor-pointer ${slots[key].portions === n ? 'bg-violet-light text-violet border-violet-mid' : 'bg-white text-[#6B7B6B] border-[#E4E8E4]'}`}>
-                                  {n} portion{n > 1 ? 's' : ''}
-                                </button>
-                              ))}
-                            </div>
-                          )}
+                        <div key={slot} className="flex items-center justify-between border border-[#E4E8E4] rounded-[7px] px-2 py-1.5">
+                          <span className="text-[12px] text-[#6B7B6B]">{slot === 'lunch' ? 'Déjeuner' : 'Dîner'}</span>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => removeOnePortion(dateKey, slot)} disabled={count === 0}
+                              className="w-6 h-6 rounded-full border border-[#E4E8E4] text-[#6B7B6B] disabled:opacity-30 cursor-pointer bg-white">−</button>
+                            <span className="text-[12px] font-semibold w-4 text-center">{count}</span>
+                            <button onClick={() => addPortion(dateKey, slot)} disabled={remaining === 0}
+                              className="w-6 h-6 rounded-full border border-teal-mid text-teal disabled:opacity-30 cursor-pointer bg-white">+</button>
+                          </div>
                         </div>
                       )
                     })}
@@ -163,20 +155,17 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
         <>
           <p className="text-[12px] text-[#6B7B6B] mb-3">Choisis un preset pour chaque portion.</p>
           <div className="flex flex-col gap-3 mb-4">
-            {Object.entries(slots).map(([key, s]) => {
-              const [dateStr, slot] = key.split('|') as [string, Slot]
-              const dayLabel = format(new Date(dateStr + 'T12:00:00'), 'EEE d MMM', { locale: fr })
+            {assignments.map((a, i) => {
+              const dayLabel = format(new Date(a.date + 'T12:00:00'), 'EEE d MMM', { locale: fr })
               return (
-                <div key={key} className="border border-[#E4E8E4] rounded-card p-2.5">
+                <div key={i} className="border border-[#E4E8E4] rounded-card p-2.5">
                   <p className="text-[12px] font-semibold text-[#1A1E1A] mb-2 capitalize">
-                    {dayLabel} — {slot === 'lunch' ? 'Déjeuner' : 'Dîner'}
+                    {dayLabel} — {a.slot === 'lunch' ? 'Déjeuner' : 'Dîner'} — Portion {i + 1}
                   </p>
-                  {s.presets.map((preset, i) => (
-                    <select key={i} value={preset} onChange={(e) => setPreset(key, i, e.target.value as Preset)}
-                      className="w-full px-3 py-2 mb-1.5 rounded-[7px] border border-[#E4E8E4] text-[12px] bg-white">
-                      {PRESET_OPTIONS.map((p) => <option key={p.id} value={p.id}>{`Portion ${i + 1} — ${p.label}`}</option>)}
-                    </select>
-                  ))}
+                  <select value={a.preset} onChange={(e) => setPresetAt(i, e.target.value as Preset)}
+                    className="w-full px-3 py-2 rounded-[7px] border border-[#E4E8E4] text-[12px] bg-white">
+                    {PRESET_OPTIONS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                  </select>
                 </div>
               )
             })}

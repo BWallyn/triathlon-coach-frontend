@@ -3,11 +3,13 @@ export type ViewMode = 'B' | 'H' | 'T'
 export type Discipline = 'swim' | 'bike' | 'run' | 'strength'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
-export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante'
+export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante' | 'recipes'
 export type Preset =
   | 'reduction_agressive' | 'reduction_moderee' | 'reduction_legere'
   | 'maintien'
   | 'masse_legere' | 'masse_moderee' | 'masse_agressive'
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
+
 
 export interface Athlete {
   id: AthleteId
@@ -90,6 +92,9 @@ export interface BatchRecipe {
   id: number
   name: string
   instructions?: string
+  base_portions: number
+  season: Season | null
+  recipe_link?: string
   ingredients: BatchRecipeIngredient[]
 }
 

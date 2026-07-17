@@ -8,6 +8,7 @@ import { useToast } from '../shared/Toast'
 import MealModal from './MealModal'
 import type { Meal, Charge } from '../../types'
 import BatchCookingModal from './BatchCookingModal'
+import { useAppStore } from '../../store'
 
 const CHARGE_LABEL: Record<Charge, string> = { high: 'Charge élevée', med: 'Charge modérée', low: 'Charge légère', rest: 'Repos' }
 const CHARGE_CLS: Record<Charge, string> = {
@@ -27,6 +28,7 @@ export default function NutritionPage() {
   const [openDays, setOpenDays] = useState<Set<string>>(new Set())
   const [editCtx, setEditCtx] = useState<{ dateKey: string; slot: 'lunch' | 'dinner'; meal?: Meal; label: string } | null>(null)
   const [batchModalOpen, setBatchModalOpen] = useState(false)
+  const { setActivePage } = useAppStore()
 
   const toggle = (key: string) =>
     setOpenDays((p) => { const s = new Set(p); s.has(key) ? s.delete(key) : s.add(key); return s })
@@ -59,6 +61,12 @@ export default function NutritionPage() {
         className="w-full flex items-center justify-center gap-2 py-3 rounded-card border border-violet-mid bg-violet-light text-violet text-[13px] font-semibold mb-4"
       >
         <i className="ti ti-cooker text-[15px]" />Batch cooking
+      </button>
+      <button
+        onClick={() => setActivePage('recipes')}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-card border border-[#E4E8E4] bg-white text-[#1A1E1A] text-[13px] font-semibold mb-4"
+      >
+        <i className="ti ti-book-2 text-[15px]" />Gérer les recettes
       </button>
 
       <div className="flex flex-col gap-2">
