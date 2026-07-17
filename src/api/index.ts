@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipeIngredient } from '../types'
+import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipeIngredient, Season } from '../types'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 const api = axios.create({ baseURL: BASE })
