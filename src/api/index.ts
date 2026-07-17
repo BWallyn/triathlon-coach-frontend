@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog } from '../types'
+import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipeIngredient } from '../types'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 const api = axios.create({ baseURL: BASE })
@@ -50,8 +50,19 @@ export const deleteWeight = (id: number) => api.delete(`/wellness/weight/${id}`)
 import type { BatchRecipe, BatchCookingPlan, PortionAssignment } from '../types'
 
 // ── Batch cooking ────────────────────────────────────────────
-export const getBatchRecipes = () =>
-  api.get<BatchRecipe[]>('/batch-cooking/recipes').then(r => r.data)
+export const getBatchRecipes = (season?: Season | 'all') =>
+  api.get<BatchRecipe[]>('/batch-cooking/recipes', {
+    params: season && season !== 'all' ? { season } : {},
+  }).then(r => r.data)
+
+export const createBatchRecipe = (payload: {
+  name: string
+  instructions?: string
+  base_portions: number
+  season: Season | null
+  recipe_link?: string
+  ingredients: Omit<BatchRecipeIngredient, 'id'>[]
+}) => api.post<BatchRecipe>('/batch-cooking/recipes', payload).then(r => r.data)
 
 export const createBatchPlan = (payload: { recipe_id: number; created_date: string; portions: PortionAssignment[] }) =>
   api.post<BatchCookingPlan>('/batch-cooking/plans', payload).then(r => r.data)
