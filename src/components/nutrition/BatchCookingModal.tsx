@@ -30,8 +30,12 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
   const [assignments, setAssignments] = useState<PortionSlot[]>([])
 
   const recipe = recipes.find((r) => r.id === recipeId)
-  const totalPortions = recipe?.base_portions ?? 0
-  const remaining = totalPortions - assignments.length
+  // Nombre de portions "de base" de la recette — purement informatif, ne
+  // contraint plus le nombre de portions qu'on peut assigner : les quantités
+  // d'ingrédients sont définies par portion (quantity_per_serving), donc
+  // n'importe quel nombre de portions se calcule correctement.
+  const basePortions = recipe?.base_portions ?? 0
+  const selectedPortions = assignments.length
 
   const reset = () => { setStep(1); setRecipeId(null); setAssignments([]) }
   const handleClose = () => { reset(); onClose() }
@@ -40,7 +44,6 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
     assignments.filter((a) => a.date === dateKey && a.slot === slot).length
 
   const addPortion = (dateKey: string, slot: Slot) => {
-    if (remaining <= 0) return
     setAssignments((p) => [...p, { date: dateKey, slot, preset: 'maintien' }])
   }
 
@@ -57,8 +60,8 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
     setAssignments((p) => p.map((a, i) => i === index ? { ...a, preset } : a))
 
   const canGoStep2 = recipeId !== null
-  const canGoStep3 = totalPortions > 0 && remaining === 0
-  const canSubmit = totalPortions > 0 && remaining === 0
+  const canGoStep3 = selectedPortions > 0
+  const canSubmit = selectedPortions > 0
 
   const handleSubmit = () => {
     if (!recipeId) return
@@ -90,7 +93,7 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
                 className={`${optBase} ${recipeId === r.id ? 'bg-teal-light text-teal border-teal-mid' : ''}`}>
                 <div className="flex justify-between items-center">
                   <span>{r.name}</span>
-                  <span className="text-[10px] text-[#A8B8A8]">{r.base_portions} portions</span>
+                  <span className="text-[10px] text-[#A8B8A8]">{r.base_portions} portions (base)</span>
                 </div>
               </button>
             ))}
@@ -108,10 +111,13 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
       {step === 2 && (
         <>
           <p className="text-[12px] text-[#6B7B6B] mb-1">
-            Cette recette donne <b>{totalPortions}</b> portions. Répartis-les sur les créneaux.
+            Cette recette est prévue pour <b>{basePortions}</b> portion{basePortions > 1 ? 's' : ''} à la base,
+            mais choisis-en autant que tu veux — les quantités d'ingrédients s'adaptent automatiquement.
           </p>
-          <p className={`text-[12px] font-semibold mb-3 ${remaining === 0 ? 'text-teal' : 'text-[#BA7517]'}`}>
-            {remaining === 0 ? 'Toutes les portions sont assignées ✓' : `${remaining} portion${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}`}
+          <p className="text-[12px] font-semibold mb-3 text-teal">
+            {selectedPortions === 0
+              ? 'Aucune portion sélectionnée pour le moment'
+              : `${selectedPortions} portion${selectedPortions > 1 ? 's' : ''} sélectionnée${selectedPortions > 1 ? 's' : ''}`}
           </p>
           <div className="flex flex-col gap-2 mb-4">
             {dates.map((date) => {
@@ -130,8 +136,8 @@ export default function BatchCookingModal({ open, onClose, onDone }: Props) {
                             <button onClick={() => removeOnePortion(dateKey, slot)} disabled={count === 0}
                               className="w-6 h-6 rounded-full border border-[#E4E8E4] text-[#6B7B6B] disabled:opacity-30 cursor-pointer bg-white">−</button>
                             <span className="text-[12px] font-semibold w-4 text-center">{count}</span>
-                            <button onClick={() => addPortion(dateKey, slot)} disabled={remaining === 0}
-                              className="w-6 h-6 rounded-full border border-teal-mid text-teal disabled:opacity-30 cursor-pointer bg-white">+</button>
+                            <button onClick={() => addPortion(dateKey, slot)}
+                              className="w-6 h-6 rounded-full border border-teal-mid text-teal cursor-pointer bg-white">+</button>
                           </div>
                         </div>
                       )
