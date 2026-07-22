@@ -3,6 +3,7 @@ import { useAppStore } from '../../store'
 const TABS = [
   { id: 'dashboard', icon: 'ti-layout', label: 'Dashboard' },
   { id: 'plan', icon: 'ti-calendar-week', label: 'Planning' },
+  { id: 'coach', icon: 'ti-sparkles', label: 'Coach IA' },
   { id: 'sante', icon: 'ti-heartbeat', label: 'Santé' },
   { id: 'food', icon: 'ti-chef-hat', label: 'Nutrition' },
   { id: 'courses', icon: 'ti-shopping-cart', label: 'Courses' },
