@@ -8,7 +8,8 @@ import { useWeek } from '../../hooks/useWeek'
 import { useAppStore } from '../../store'
 import { useAthletes } from '../../hooks/useAthletes'
 import { useToast } from '../shared/Toast'
-import type { AthleteId, Charge, Discipline } from '../../types'
+import { useRaces } from '../../hooks/useRaces'
+import type { AthleteId, Charge, Discipline, RaceDiscipline, RacePriority } from '../../types'
 
 // ── Palettes ──────────────────────────────────────────────────
 const CHARGE_COLOR: Record<Charge, string> = {
@@ -28,6 +29,18 @@ const DISC_ICON: Record<Discipline, string> = {
 }
 const DISC_COLOR: Record<Discipline, string> = {
   swim: 'text-teal', bike: 'text-amber-sport', run: 'text-ocean', strength: 'text-violet',
+}
+const RACE_DISC_ICON: Record<RaceDiscipline, string> = {
+  triathlon: 'ti-triangle', running: 'ti-run', cycling: 'ti-bike', swim: 'ti-wave-sine',
+}
+const RACE_DISC_LABEL: Record<RaceDiscipline, string> = {
+  triathlon: 'Triathlon', running: 'Course à pied', cycling: 'Vélo', swim: 'Natation',
+}
+const RACE_PRIORITY_TEXT: Record<RacePriority, string> = {
+  A: 'text-amber-sport', B: 'text-teal', C: 'text-ocean',
+}
+const RACE_PRIORITY_BG: Record<RacePriority, string> = {
+  A: 'bg-amber-sport', B: 'bg-teal', C: 'bg-ocean',
 }
 
 function ScoreBar({ value, max = 5, color }: { value: number; max?: number; color: string }) {
@@ -155,6 +168,7 @@ export default function DashboardPage() {
   const { summary, sleepMutation, feelingMutation } = useDashboard()
   const { showToast } = useToast()
   const { setActivePage } = useAppStore()
+  const { races } = useRaces()
 
   const [calMonth, setCalMonth] = useState(new Date())
   const [logModal, setLogModal] = useState<{ date: string; athleteId: AthleteId } | null>(null)
@@ -222,6 +236,18 @@ export default function DashboardPage() {
   const sleepH = avgSleep('H')
   const feelingB = avgFeeling('B')
   const feelingH = avgFeeling('H')
+
+  // ── Races ───────────────────────────────────────────────
+  const racesByDay = useMemo(() => {
+    const map: Record<string, typeof races> = {}
+    races.forEach((r) => { (map[r.date] ??= []).push(r) })
+    return map
+  }, [races])
+
+  const upcomingRaces = useMemo(
+    () => races.filter((r) => r.date >= todayKey).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5),
+    [races, todayKey],
+  )
 
   return (
     <div className="px-4 md:px-8 pt-6 pb-24 max-w-screen-xl mx-auto">
@@ -311,16 +337,26 @@ export default function DashboardPage() {
             const today = isToday(d)
             const isDoneOrToday = key <= todayKey
             const sessions = monthSessionsByDay[key] ?? { B: [], H: [] }
+            const dayRaces = racesByDay[key] ?? []
 
             return (
-              <div key={d.toISOString()} className={`min-h-[88px] md:min-h-[98px] rounded-[8px] border p-1.5 md:p-2 flex flex-col gap-1 ${today ? 'ring-2 ring-teal ring-offset-0 border-teal-mid' : 'border-[#E4E8E4]'}`}
+                <div key={d.toISOString()} className={`min-h-[88px] md:min-h-[98px] rounded-[8px] border p-1.5 md:p-2 flex flex-col gap-1 relative ${today ? 'ring-2 ring-teal ring-offset-0 border-teal-mid' : 'border-[#E4E8E4]'}`}
                 style={{ background: charge ? CHARGE_DOT[charge] + '18' : '#FAFBFA' }}>
                 <div className="flex items-center justify-between">
-                  <span className={`text-[11px] md:text-[12px] font-bold ${today ? 'text-teal' : 'text-[#1A1E1A]'}`}>{format(d, 'd')}</span>
-                  {charge && charge !== 'rest' && (
+                    <span className={`text-[11px] md:text-[12px] font-bold ${today ? 'text-teal' : 'text-[#1A1E1A]'}`}>{format(d, 'd')}</span>
+                    {charge && charge !== 'rest' && (
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: CHARGE_DOT[charge] }} />
-                  )}
+                    )}
                 </div>
+
+                {dayRaces.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                    {dayRaces.map((r) => (
+                        <i key={r.id} title={`${r.name} — ${RACE_DISC_LABEL[r.discipline]}`}
+                        className={`ti ${RACE_DISC_ICON[r.discipline]} text-[11px] ${RACE_PRIORITY_TEXT[r.priority]}`} />
+                    ))}
+                    </div>
+                )}
 
                 {(['B', 'H'] as AthleteId[]).map((athlete) => (
                   <div key={athlete} className={`flex items-center gap-1 ${isDoneOrToday ? 'opacity-100' : 'opacity-55'}`}>
@@ -334,9 +370,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
             )
-          })}
+            })}
         </div>
 
         {isMonthSessionsLoading && (
@@ -518,6 +554,37 @@ export default function DashboardPage() {
               )
             })}
           </div>
+
+          {/* Races */}
+          <div className="bg-white border border-[#E4E8E4] rounded-card p-5">
+            <div className="flex items-center justify-between mb-3">
+                <h2 className="text-[15px] font-bold text-[#1A1E1A]">Prochaines courses</h2>
+                <button onClick={() => setActivePage('races')} className="text-[11px] text-teal font-semibold bg-none border-none cursor-pointer">
+                Gérer
+                </button>
+            </div>
+            {upcomingRaces.length === 0 ? (
+                <p className="text-[12px] text-[#A8B8A8] italic">Aucune course à venir.</p>
+            ) : (
+                <div className="flex flex-col gap-2.5">
+                {upcomingRaces.map((r) => (
+                    <button key={r.id} onClick={() => setActivePage('races')}
+                    className="flex items-center gap-2.5 text-left bg-none border-none cursor-pointer p-0 w-full">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${RACE_PRIORITY_BG[r.priority]}`}>
+                        <i className={`ti ${RACE_DISC_ICON[r.discipline]} text-[14px] text-white`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-semibold text-[#1A1E1A] truncate">{r.name}</p>
+                        <p className="text-[11px] text-[#6B7B6B]">
+                        {format(new Date(r.date + 'T12:00:00'), 'd MMM', { locale: fr })} · {r.athlete_id ? athleteNames[r.athlete_id] : 'Les deux'}
+                        </p>
+                    </div>
+                    <span className="text-[9px] font-bold text-[#A8B8A8]">{r.priority}</span>
+                    </button>
+                ))}
+                </div>
+            )}
+            </div>
 
           {/* Raccourcis */}
           <div className="bg-white border border-[#E4E8E4] rounded-card p-5">
