@@ -7,6 +7,8 @@ import NutritionPage from './components/nutrition/NutritionPage'
 import CoursesPage from './components/courses/CoursesPage'
 import SantePage from './components/health/SantePage'
 import RecipesPage from './components/nutrition/RecipesPage'
+import CoachPage from './components/coach/CoachPage'
+import RacesPage from './components/coach/RacesPage'
 
 export default function App() {
   const activePage = useAppStore((s) => s.activePage)
@@ -20,6 +22,8 @@ export default function App() {
         {activePage === 'courses' && <CoursesPage />}
         {activePage === 'sante' && <SantePage />}
         {activePage === 'recipes' && <RecipesPage />}
+        {activePage === 'coach' && <CoachPage />}
+        {activePage === 'races' && <RacesPage />}
         <BottomNav />
       </div>
     </ToastProvider>
