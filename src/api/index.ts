@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipe, BatchRecipeIngredient, BatchCookingPlan, PortionAssignment, Season } from '../types'
+import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipe, BatchRecipeIngredient, BatchCookingPlan, PortionAssignment, Season, Race, TrainingPlan } from '../types'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 const api = axios.create({ baseURL: BASE })
@@ -84,3 +84,25 @@ export const deleteBatchRecipe = (id: number) =>
 
 export const createBatchPlan = (payload: { recipe_id: number; created_date: string; portions: PortionAssignment[] }) =>
   api.post<BatchCookingPlan>('/batch-cooking/plans', payload).then(r => r.data)
+
+// ── Races ────────────────────────────────────────────────────
+export const getRaces = (params?: { athlete_id?: string; upcoming_only?: boolean }) =>
+  api.get<Race[]>('/races', { params }).then(r => r.data)
+
+export const createRace = (payload: Omit<Race, 'id'>) =>
+  api.post<Race>('/races', payload).then(r => r.data)
+
+export const updateRace = (id: number, payload: Omit<Race, 'id'>) =>
+  api.put<Race>(`/races/${id}`, payload).then(r => r.data)
+
+export const deleteRace = (id: number) => api.delete(`/races/${id}`)
+
+// ── AI coach ─────────────────────────────────────────────────
+export const generateTrainingPlan = (payload: {
+  week_start: string
+  week_end: string
+  goal?: string
+  load_level?: string
+  constraints?: string
+  max_sessions?: number
+}) => api.post<TrainingPlan>('/ai/training-plan', payload).then(r => r.data)

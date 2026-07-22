@@ -1,9 +1,11 @@
 export type AthleteId = 'B' | 'H'
 export type ViewMode = 'B' | 'H' | 'T'
 export type Discipline = 'swim' | 'bike' | 'run' | 'strength'
+export type RaceFormat = 'sprint' | 'olympic' | 'half_ironman' | 'ironman' | 'other'
+export type RacePriority = 'A' | 'B' | 'C'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
-export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante' | 'recipes'
+export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante' | 'recipes' | 'races'
 export type Preset =
   | 'reduction_agressive' | 'reduction_moderee' | 'reduction_legere'
   | 'maintien'
@@ -23,6 +25,39 @@ export interface TrainingSession {
   discipline: Discipline
   kind: string
   duration: string
+}
+
+export interface Race {
+  id: number
+  athlete_id: AthleteId | null   // null = shared, both athletes race it
+  name: string
+  date: string                    // YYYY-MM-DD
+  format: RaceFormat
+  priority: RacePriority
+  target_time?: string
+  location?: string
+  goal_notes?: string
+}
+
+export interface TrainingPlanSession {
+  athlete: 'both' | AthleteId
+  discipline: Discipline
+  kind: string
+  duration: string
+  description: string
+}
+
+export interface TrainingPlanDay {
+  day: string   // 'Lundi' | 'Mardi' | ...
+  sessions: TrainingPlanSession[]
+  rest: boolean
+}
+
+export interface TrainingPlan {
+  week_focus: string
+  total_hours: number
+  days: TrainingPlanDay[]
+  coach_notes: string
 }
 
 export interface Ingredient {
