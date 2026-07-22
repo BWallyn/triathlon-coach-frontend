@@ -3,15 +3,44 @@ import { useRaces } from '../../hooks/useRaces'
 import { useAthletes } from '../../hooks/useAthletes'
 import { useToast } from '../shared/Toast'
 import { useAppStore } from '../../store'
-import type { Race, RaceFormat, RacePriority, AthleteId } from '../../types'
+import type { Race, RaceFormat, RaceDiscipline, RacePriority, AthleteId } from '../../types'
 
-const FORMAT_OPTIONS: { id: RaceFormat; label: string }[] = [
-  { id: 'sprint', label: 'Sprint' },
-  { id: 'olympic', label: 'Olympique' },
-  { id: 'half_ironman', label: 'Half-Ironman' },
-  { id: 'ironman', label: 'Ironman' },
-  { id: 'other', label: 'Autre' },
+const DISCIPLINE_OPTIONS: { id: RaceDiscipline; label: string; icon: string }[] = [
+  { id: 'triathlon', label: 'Triathlon', icon: 'ti-triangle' },
+  { id: 'running', label: 'Course à pied', icon: 'ti-run' },
+  { id: 'cycling', label: 'Vélo', icon: 'ti-bike' },
+  { id: 'swim', label: 'Natation', icon: 'ti-wave-sine' },
 ]
+
+const FORMAT_OPTIONS_BY_DISCIPLINE: Record<RaceDiscipline, { id: RaceFormat; label: string }[]> = {
+  triathlon: [
+    { id: 'sprint', label: 'Sprint' },
+    { id: 'olympic', label: 'Olympique' },
+    { id: 'half_ironman', label: 'Half-Ironman' },
+    { id: 'ironman', label: 'Ironman' },
+    { id: 'other', label: 'Autre' },
+  ],
+  running: [
+    { id: '5k', label: '5 km' },
+    { id: '10k', label: '10 km' },
+    { id: 'half_marathon', label: 'Semi-marathon' },
+    { id: 'marathon', label: 'Marathon' },
+    { id: 'trail', label: 'Trail' },
+    { id: 'other', label: 'Autre' },
+  ],
+  cycling: [
+    { id: 'criterium', label: 'Critérium' },
+    { id: 'gran_fondo', label: 'Gran Fondo' },
+    { id: 'time_trial', label: 'Contre-la-montre' },
+    { id: 'road_race', label: 'Course sur route' },
+    { id: 'other', label: 'Autre' },
+  ],
+  swim: [
+    { id: 'open_water', label: 'Eau libre' },
+    { id: 'pool', label: 'Bassin' },
+    { id: 'other', label: 'Autre' },
+  ],
+}
 
 const PRIORITY_CLS: Record<RacePriority, string> = {
   A: 'bg-amber-light text-amber-sport border-amber-mid',
@@ -23,6 +52,7 @@ interface Draft {
   athlete_id: AthleteId | 'shared'
   name: string
   date: string
+  discipline: RaceDiscipline
   format: RaceFormat
   priority: RacePriority
   target_time: string
@@ -31,7 +61,7 @@ interface Draft {
 }
 
 const emptyDraft = (): Draft => ({
-  athlete_id: 'shared', name: '', date: '', format: 'olympic', priority: 'B',
+  athlete_id: 'shared', name: '', date: '', discipline: 'triathlon', format: 'olympic', priority: 'B',
   target_time: '', location: '', goal_notes: '',
 })
 
@@ -50,11 +80,14 @@ export default function RacesPage() {
     setEditingId(r.id)
     setDraft({
       athlete_id: r.athlete_id ?? 'shared',
-      name: r.name, date: r.date, format: r.format, priority: r.priority,
+      name: r.name, date: r.date, discipline: r.discipline, format: r.format, priority: r.priority,
       target_time: r.target_time ?? '', location: r.location ?? '', goal_notes: r.goal_notes ?? '',
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  const setDiscipline = (discipline: RaceDiscipline) =>
+    setDraft((d) => ({ ...d, discipline, format: FORMAT_OPTIONS_BY_DISCIPLINE[discipline][0].id }))
 
   const canSubmit = draft.name.trim() && draft.date
 
@@ -63,6 +96,7 @@ export default function RacesPage() {
       athlete_id: draft.athlete_id === 'shared' ? null : draft.athlete_id,
       name: draft.name.trim(),
       date: draft.date,
+      discipline: draft.discipline,
       format: draft.format,
       priority: draft.priority,
       target_time: draft.target_time.trim() || undefined,
@@ -112,6 +146,16 @@ export default function RacesPage() {
           placeholder="Ex: Half de Nice"
           className="w-full px-3 py-2.5 rounded-[7px] border border-[#E4E8E4] text-[14px] mb-3" />
 
+        <label className="text-[12px] font-medium text-[#6B7B6B] block mb-2">Discipline</label>
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {DISCIPLINE_OPTIONS.map((opt) => (
+            <button key={opt.id} onClick={() => setDiscipline(opt.id)}
+              className={`px-2 py-2 rounded-[7px] border text-[11px] font-medium cursor-pointer text-center leading-snug transition-all ${draft.discipline === opt.id ? 'bg-teal-light text-teal border-teal-mid' : 'bg-[#F4F6F4] text-[#6B7B6B] border-[#E4E8E4]'}`}>
+              <i className={`ti ${opt.icon} text-[15px]`} /><br />{opt.label}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
             <label className="text-[12px] font-medium text-[#6B7B6B] block mb-1">Date</label>
@@ -122,7 +166,7 @@ export default function RacesPage() {
             <label className="text-[12px] font-medium text-[#6B7B6B] block mb-1">Format</label>
             <select value={draft.format} onChange={(e) => setDraft((d) => ({ ...d, format: e.target.value as RaceFormat }))}
               className="w-full px-3 py-2.5 rounded-[7px] border border-[#E4E8E4] text-[14px] bg-white">
-              {FORMAT_OPTIONS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+              {FORMAT_OPTIONS_BY_DISCIPLINE[draft.discipline].map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
             </select>
           </div>
         </div>
@@ -175,30 +219,37 @@ export default function RacesPage() {
       <h2 className="text-[14px] font-bold mb-3">Courses enregistrées</h2>
       {isLoading && <p className="text-[13px] text-[#A8B8A8]">Chargement…</p>}
       <div className="flex flex-col gap-2">
-        {races.map((r) => (
-          <div key={r.id} className="bg-white border border-[#E4E8E4] rounded-card p-3.5">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[14px] font-semibold text-[#1A1E1A]">{r.name}</span>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${PRIORITY_CLS[r.priority]}`}>
-                  {r.priority}
+        {races.map((r) => {
+          const discOpt = DISCIPLINE_OPTIONS.find((d) => d.id === r.discipline)
+          const formatLabel = FORMAT_OPTIONS_BY_DISCIPLINE[r.discipline]?.find((f) => f.id === r.format)?.label ?? r.format
+          return (
+            <div key={r.id} className="bg-white border border-[#E4E8E4] rounded-card p-3.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[14px] font-semibold text-[#1A1E1A] flex items-center gap-1.5">
+                  <i className={`ti ${discOpt?.icon ?? 'ti-flag'} text-[13px] text-teal`} />
+                  {r.name}
                 </span>
-                <button onClick={() => startEdit(r)} className="text-[#A8B8A8] hover:text-[#6B7B6B] text-[14px] bg-none border-none cursor-pointer p-0.5">
-                  <i className="ti ti-edit" />
-                </button>
-                <button onClick={() => handleDelete(r)} className="text-[#A8B8A8] hover:text-[#A32D2D] text-[14px] bg-none border-none cursor-pointer p-0.5">
-                  <i className="ti ti-trash" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${PRIORITY_CLS[r.priority]}`}>
+                    {r.priority}
+                  </span>
+                  <button onClick={() => startEdit(r)} className="text-[#A8B8A8] hover:text-[#6B7B6B] text-[14px] bg-none border-none cursor-pointer p-0.5">
+                    <i className="ti ti-edit" />
+                  </button>
+                  <button onClick={() => handleDelete(r)} className="text-[#A8B8A8] hover:text-[#A32D2D] text-[14px] bg-none border-none cursor-pointer p-0.5">
+                    <i className="ti ti-trash" />
+                  </button>
+                </div>
               </div>
+              <p className="text-[11px] text-[#6B7B6B]">
+                {r.date} · {discOpt?.label} — {formatLabel} · {r.athlete_id ? athleteNames[r.athlete_id] : 'Les deux'}
+                {r.target_time ? ` · objectif ${r.target_time}` : ''}
+              </p>
+              {r.location && <p className="text-[11px] text-[#A8B8A8] mt-0.5">{r.location}</p>}
+              {r.goal_notes && <p className="text-[12px] text-[#6B7B6B] mt-1">{r.goal_notes}</p>}
             </div>
-            <p className="text-[11px] text-[#6B7B6B]">
-              {r.date} · {FORMAT_OPTIONS.find((f) => f.id === r.format)?.label} · {r.athlete_id ? athleteNames[r.athlete_id] : 'Les deux'}
-              {r.target_time ? ` · objectif ${r.target_time}` : ''}
-            </p>
-            {r.location && <p className="text-[11px] text-[#A8B8A8] mt-0.5">{r.location}</p>}
-            {r.goal_notes && <p className="text-[12px] text-[#6B7B6B] mt-1">{r.goal_notes}</p>}
-          </div>
-        ))}
+          )
+        })}
         {!isLoading && !races.length && <p className="text-[12px] text-[#A8B8A8] italic">Aucune course pour l'instant.</p>}
       </div>
     </div>

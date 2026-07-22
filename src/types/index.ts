@@ -1,7 +1,13 @@
 export type AthleteId = 'B' | 'H'
 export type ViewMode = 'B' | 'H' | 'T'
 export type Discipline = 'swim' | 'bike' | 'run' | 'strength'
-export type RaceFormat = 'sprint' | 'olympic' | 'half_ironman' | 'ironman' | 'other'
+export type RaceDiscipline = 'triathlon' | 'running' | 'cycling' | 'swim'
+export type RaceFormat =
+  | 'sprint' | 'olympic' | 'half_ironman' | 'ironman'
+  | '5k' | '10k' | 'half_marathon' | 'marathon' | 'trail'
+  | 'criterium' | 'gran_fondo' | 'time_trial' | 'road_race'
+  | 'open_water' | 'pool'
+  | 'other'
 export type RacePriority = 'A' | 'B' | 'C'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
@@ -32,6 +38,7 @@ export interface Race {
   athlete_id: AthleteId | null   // null = shared, both athletes race it
   name: string
   date: string                    // YYYY-MM-DD
+  discipline: RaceDiscipline
   format: RaceFormat
   priority: RacePriority
   target_time?: string
