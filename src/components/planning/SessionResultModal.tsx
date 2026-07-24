@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Modal from '../shared/Modal'
+import { parsePaceToSeconds, formatSecondsToPace } from '../../utils/pace'
 import type { Discipline, SessionResult } from '../../types'
 
 interface Props {
@@ -18,7 +19,8 @@ export default function SessionResultModal({ open, onClose, sessionLabel, discip
   const [avgHr, setAvgHr] = useState('')
   const [maxHr, setMaxHr] = useState('')
   const [avgPower, setAvgPower] = useState('')
-  const [avgSpeed, setAvgSpeed] = useState('')
+  const [avgSpeed, setAvgSpeed] = useState('')   // km/h — vélo uniquement
+  const [pace, setPace] = useState('')           // "M:SS" — run / swim uniquement
   const [elevation, setElevation] = useState('')
   const [calories, setCalories] = useState('')
   const [rpe, setRpe] = useState('')
@@ -32,6 +34,7 @@ export default function SessionResultModal({ open, onClose, sessionLabel, discip
       setMaxHr(existing?.max_hr != null ? String(existing.max_hr) : '')
       setAvgPower(existing?.avg_power_w != null ? String(existing.avg_power_w) : '')
       setAvgSpeed(existing?.avg_speed_kmh != null ? String(existing.avg_speed_kmh) : '')
+      setPace(formatSecondsToPace(existing?.avg_pace_sec))
       setElevation(existing?.elevation_gain_m != null ? String(existing.elevation_gain_m) : '')
       setCalories(existing?.calories != null ? String(existing.calories) : '')
       setRpe(existing?.rpe != null ? String(existing.rpe) : '')
@@ -41,8 +44,9 @@ export default function SessionResultModal({ open, onClose, sessionLabel, discip
 
   const showDistance = discipline !== 'strength'
   const showPower = discipline === 'bike'
-  const showSpeed = discipline !== 'strength'
-  const speedLabel = discipline === 'swim' ? 'Vitesse moyenne (km/h)' : 'Vitesse moyenne (km/h)'
+  const showSpeedKmh = discipline === 'bike'
+  const showPace = discipline === 'run' || discipline === 'swim'
+  const paceLabel = discipline === 'swim' ? 'Allure moyenne (min/100m)' : 'Allure moyenne (min/km)'
 
   const num = (v: string) => (v.trim() === '' ? undefined : Number(v.replace(',', '.')))
 
@@ -53,7 +57,8 @@ export default function SessionResultModal({ open, onClose, sessionLabel, discip
       avg_hr: num(avgHr) != null ? Math.round(num(avgHr)!) : undefined,
       max_hr: num(maxHr) != null ? Math.round(num(maxHr)!) : undefined,
       avg_power_w: showPower ? num(avgPower) : undefined,
-      avg_speed_kmh: showSpeed ? num(avgSpeed) : undefined,
+      avg_speed_kmh: showSpeedKmh ? num(avgSpeed) : undefined,
+      avg_pace_sec: showPace ? parsePaceToSeconds(pace) : undefined,
       elevation_gain_m: num(elevation),
       calories: num(calories) != null ? Math.round(num(calories)!) : undefined,
       rpe: num(rpe) != null ? Math.round(num(rpe)!) : undefined,
@@ -85,7 +90,21 @@ export default function SessionResultModal({ open, onClose, sessionLabel, discip
       {field('FC moyenne', avgHr, setAvgHr, 'bpm')}
       {field('FC max', maxHr, setMaxHr, 'bpm')}
       {showPower && field('Puissance moyenne', avgPower, setAvgPower, 'W')}
-      {showSpeed && field(speedLabel, avgSpeed, setAvgSpeed, 'km/h')}
+      {showSpeedKmh && field('Vitesse moyenne', avgSpeed, setAvgSpeed, 'km/h')}
+
+      {showPace && (
+        <div className="mb-3">
+          <label className="text-[12px] font-medium text-[#6B7B6B] block mb-1.5">{paceLabel}</label>
+          <input
+            value={pace}
+            onChange={(e) => setPace(e.target.value)}
+            placeholder={discipline === 'swim' ? 'ex: 1:45' : 'ex: 4:35'}
+            className="w-full px-3 py-2.5 rounded-[7px] border border-[#E4E8E4] text-[14px] bg-white text-[#1A1E1A] focus:outline-none focus:border-teal-mid"
+          />
+          <p className="text-[11px] text-[#A8B8A8] mt-1">Format minutes:secondes</p>
+        </div>
+      )}
+
       {field('Dénivelé', elevation, setElevation, 'm')}
       {field('Calories', calories, setCalories, 'kcal')}
 
