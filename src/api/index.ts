@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipe, BatchRecipeIngredient, BatchCookingPlan, PortionAssignment, Season, Race, TrainingPlan } from '../types'
+import type { Athlete, TrainingSession, Meal, Ingredient, SleepLog, FeelingLog, DashboardSummary, WeightLog, BatchRecipe, BatchRecipeIngredient, BatchCookingPlan, PortionAssignment, Season, SessionResult, SessionResultWithSession, Race, TrainingPlan } from '../types'
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
 const api = axios.create({ baseURL: BASE })
@@ -15,6 +15,15 @@ export const getSessions = (weekStart: string, weekEnd: string) =>
 export const createSession = (payload: Omit<TrainingSession, 'id'>) =>
   api.post<TrainingSession>('/sessions', payload).then(r => r.data)
 export const deleteSession = (id: number) => api.delete(`/sessions/${id}`)
+
+// ── Session results (performance) ──────────────────────────────
+export const getSessionResults = (params: { athlete_id?: string; date_start?: string; date_end?: string; discipline?: string }) =>
+  api.get<SessionResultWithSession[]>('/sessions/results', { params }).then(r => r.data)
+
+export const upsertSessionResult = (sessionId: number, payload: Omit<SessionResult, 'id' | 'session_id'>) =>
+  api.post<SessionResult>(`/sessions/${sessionId}/result`, payload).then(r => r.data)
+
+export const deleteSessionResult = (sessionId: number) => api.delete(`/sessions/${sessionId}/result`)
 
 // ── Meals ─────────────────────────────────────────────────────
 export const getMeals = (weekStart: string, weekEnd: string) =>

@@ -31,6 +31,32 @@ export interface TrainingSession {
   discipline: Discipline
   kind: string
   duration: string
+  result?: SessionResult
+}
+
+export interface SessionResult {
+  id: number
+  session_id: number
+  actual_duration_min?: number
+  actual_distance_km?: number
+  avg_hr?: number
+  max_hr?: number
+  avg_power_w?: number
+  avg_speed_kmh?: number
+  elevation_gain_m?: number
+  calories?: number
+  rpe?: number
+  notes?: string
+  source: string
+  strava_activity_id?: string
+}
+
+export interface SessionResultWithSession extends SessionResult {
+  date: string
+  athlete_id: AthleteId
+  discipline: Discipline
+  kind: string
+  planned_duration: string
 }
 
 export interface Race {

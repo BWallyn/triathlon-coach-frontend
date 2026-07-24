@@ -6,7 +6,6 @@ const TABS = [
   { id: 'coach', icon: 'ti-sparkles', label: 'Coach IA' },
   { id: 'sante', icon: 'ti-heartbeat', label: 'Santé' },
   { id: 'food', icon: 'ti-chef-hat', label: 'Nutrition' },
-  { id: 'courses', icon: 'ti-shopping-cart', label: 'Courses' },
 ] as const
 
 export default function BottomNav() {
