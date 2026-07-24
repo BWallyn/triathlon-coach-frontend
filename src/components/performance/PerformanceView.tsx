@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { usePerformance, type PerfRange } from '../../hooks/usePerformance'
 import { useAthletes } from '../../hooks/useAthletes'
+import { formatSecondsToPace } from '../../utils/pace'
 import type { AthleteId, Discipline } from '../../types'
 
 const RANGE_OPTIONS: { id: PerfRange; label: string }[] = [
@@ -58,10 +59,17 @@ export default function PerformanceView() {
     () => sorted.filter((r) => r.avg_power_w != null).map((r) => ({ label: fmtDay(r.date), puissance: r.avg_power_w })),
     [sorted],
   )
+  // Vitesse (km/h) — vélo uniquement
   const speedData = useMemo(
     () => sorted.filter((r) => r.avg_speed_kmh != null).map((r) => ({ label: fmtDay(r.date), vitesse: r.avg_speed_kmh })),
     [sorted],
   )
+  // Allure (sec/km ou sec/100m selon discipline) — run / swim uniquement
+  const paceData = useMemo(
+    () => sorted.filter((r) => r.avg_pace_sec != null).map((r) => ({ label: fmtDay(r.date), paceSec: r.avg_pace_sec })),
+    [sorted],
+  )
+  const paceUnitLabel = discipline === 'swim' ? 'min/100m' : 'min/km'
   const rpeData = useMemo(
     () => sorted.filter((r) => r.rpe != null).map((r) => ({ label: fmtDay(r.date), rpe: r.rpe })),
     [sorted],
@@ -156,17 +164,38 @@ export default function PerformanceView() {
         </ChartCard>
       )}
 
-      <ChartCard title="Vitesse moyenne" empty={!speedData.length}>
-        <ResponsiveContainer>
-          <LineChart data={speedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E4E8E4" />
-            <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-            <YAxis tick={{ fontSize: 10 }} />
-            <Tooltip />
-            <Line type="monotone" dataKey="vitesse" name="Vitesse (km/h)" stroke="#1D9E75" strokeWidth={2} dot={{ r: 2 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartCard>
+      {(discipline === 'bike' || discipline === 'all') && (
+        <ChartCard title="Vitesse moyenne (vélo)" empty={!speedData.length}>
+          <ResponsiveContainer>
+            <LineChart data={speedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E4E8E4" />
+              <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line type="monotone" dataKey="vitesse" name="Vitesse (km/h)" stroke="#1D9E75" strokeWidth={2} dot={{ r: 2 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
+
+      {(discipline === 'run' || discipline === 'swim') && (
+        <ChartCard title={`Allure moyenne (${paceUnitLabel})`} empty={!paceData.length}>
+          <ResponsiveContainer>
+            <LineChart data={paceData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E4E8E4" />
+              <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+              <YAxis
+                reversed
+                tick={{ fontSize: 10 }}
+                tickFormatter={(v: number) => formatSecondsToPace(v)}
+                width={40}
+              />
+              <Tooltip formatter={(value: number) => [formatSecondsToPace(value), 'Allure']} />
+              <Line type="monotone" dataKey="paceSec" name="Allure" stroke="#7F77DD" strokeWidth={2} dot={{ r: 2 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
 
       <ChartCard title="Ressenti d'effort (RPE)" empty={!rpeData.length}>
         <ResponsiveContainer>

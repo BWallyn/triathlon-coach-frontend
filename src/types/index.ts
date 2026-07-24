@@ -42,7 +42,8 @@ export interface SessionResult {
   avg_hr?: number
   max_hr?: number
   avg_power_w?: number
-  avg_speed_kmh?: number
+  avg_speed_kmh?: number       // vélo uniquement
+  avg_pace_sec?: number        // sec/km (run) ou sec/100m (swim)
   elevation_gain_m?: number
   calories?: number
   rpe?: number
