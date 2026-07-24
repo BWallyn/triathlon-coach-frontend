@@ -11,7 +11,7 @@ export type RaceFormat =
 export type RacePriority = 'A' | 'B' | 'C'
 export type Slot = 'lunch' | 'dinner'
 export type Charge = 'high' | 'med' | 'low' | 'rest'
-export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante' | 'recipes' | 'races' | 'performance'
+export type Page = 'dashboard' | 'plan' | 'food' | 'courses' | 'coach' | 'sante' | 'recipes' | 'races'
 export type Preset =
   | 'reduction_agressive' | 'reduction_moderee' | 'reduction_legere'
   | 'maintien'

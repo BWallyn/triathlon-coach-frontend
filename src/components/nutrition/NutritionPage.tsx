@@ -65,8 +65,14 @@ export default function NutritionPage() {
       <button
         onClick={() => setActivePage('recipes')}
         className="w-full flex items-center justify-center gap-2 py-3 rounded-card border border-[#E4E8E4] bg-white text-[#1A1E1A] text-[13px] font-semibold mb-4"
-      >
+        >
         <i className="ti ti-book-2 text-[15px]" />Gérer les recettes
+        </button>
+        <button
+        onClick={() => setActivePage('courses')}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-card border border-[#E4E8E4] bg-white text-[#1A1E1A] text-[13px] font-semibold mb-4"
+        >
+        <i className="ti ti-shopping-cart text-[15px]" />Voir la liste de courses
       </button>
 
       <div className="flex flex-col gap-2">

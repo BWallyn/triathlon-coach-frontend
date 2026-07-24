@@ -593,13 +593,14 @@ export default function DashboardPage() {
               {([
                 { page: 'plan', icon: 'ti-calendar-week', label: 'Planning d\'entraînement' },
                 { page: 'food', icon: 'ti-chef-hat', label: 'Nutrition & batch cooking' },
+                { page: 'courses', icon: 'ti-shopping-cart', label: 'Liste de courses' },
                 { page: 'coach', icon: 'ti-sparkles', label: 'Coach IA' },
-              ] as const).map(({ page, icon, label }) => (
+                ] as const).map(({ page, icon, label }) => (
                 <button key={page} onClick={() => setActivePage(page)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] border border-[#E4E8E4] bg-[#F9FAF9] hover:bg-[#F4F6F4] cursor-pointer text-left transition-colors w-full">
-                  <i className={`ti ${icon} text-[16px] text-teal`} />
-                  <span className="text-[13px] text-[#1A1E1A]">{label}</span>
-                  <i className="ti ti-chevron-right text-[13px] text-[#A8B8A8] ml-auto" />
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-[8px] border border-[#E4E8E4] bg-[#F9FAF9] hover:bg-[#F4F6F4] cursor-pointer text-left transition-colors w-full">
+                    <i className={`ti ${icon} text-[16px] text-teal`} />
+                    <span className="text-[13px] text-[#1A1E1A]">{label}</span>
+                    <i className="ti ti-chevron-right text-[13px] text-[#A8B8A8] ml-auto" />
                 </button>
               ))}
             </div>

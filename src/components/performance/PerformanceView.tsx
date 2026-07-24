@@ -40,7 +40,7 @@ function ChartCard({ title, children, empty }: { title: string; children: React.
   )
 }
 
-export default function PerformancePage() {
+export default function PerformanceView() {
   const { athleteNames } = useAthletes()
   const [athleteId, setAthleteId] = useState<AthleteId>('B')
   const [range, setRange] = useState<PerfRange>('3m')
@@ -78,10 +78,7 @@ export default function PerformancePage() {
   const loggedHours = results.reduce((sum, r) => sum + (r.actual_duration_min ?? 0) / 60, 0)
 
   return (
-    <div className="px-4 md:px-8 pt-6 pb-24 max-w-screen-xl mx-auto">
-      <h1 className="text-[22px] font-bold tracking-tight mb-1">Performance</h1>
-      <p className="text-[13px] text-[#6B7B6B] mb-4">Résultats réels des séances — alimente le Coach IA pour ajuster les prochains plans</p>
-
+    <div>
       <div className="flex gap-1.5 bg-white border border-[#E4E8E4] rounded-card p-1 mb-3">
         {(['B', 'H'] as AthleteId[]).map((a) => (
           <button key={a} onClick={() => setAthleteId(a)}
