@@ -5,9 +5,11 @@ import { useAppStore } from '../../store'
 import { useWeek } from '../../hooks/useWeek'
 import { useTraining, computeCharge } from '../../hooks/useTraining'
 import { useAthletes } from '../../hooks/useAthletes'
+import { useSessionResults } from '../../hooks/useSessionResults'
 import { useToast } from '../shared/Toast'
 import SessionModal from './SessionModal'
-import type { ViewMode, Discipline } from '../../types'
+import SessionResultModal from './SessionResultModal'
+import type { ViewMode, Discipline, AthleteId, SessionResult } from '../../types'
 
 const DISC_LABEL: Record<Discipline, string> = { swim: 'Natation', bike: 'Vélo', run: 'Run', strength: 'Muscu' }
 const DISC_ICON: Record<Discipline, string> = { swim: 'ti-wave-sine', bike: 'ti-bike', run: 'ti-run', strength: 'ti-barbell' }
@@ -20,9 +22,15 @@ export default function PlanningPage() {
   const { shiftWeek } = useAppStore()
   const { dates, label } = useWeek()
   const { sessionsByDate, loadCounts, addMutation, removeMutation } = useTraining()
+  const { saveMutation: saveResultMutation, removeMutation: removeResultMutation } = useSessionResults()
   const { showToast } = useToast()
 
   const [modalDay, setModalDay] = useState<{ key: string; label: string } | null>(null)
+  const [resultCtx, setResultCtx] = useState<{
+    sessionId: number; discipline: Discipline; label: string; existing?: SessionResult
+  } | null>(null)
+
+  const todayKey = format(new Date(), 'yyyy-MM-dd')
 
   const openModal = (date: Date) => {
     setModalDay({
@@ -113,6 +121,7 @@ export default function PlanningPage() {
             const charge = computeCharge(sB, sH)
             const sessions = viewMode === 'T' ? [...sB.map(s => ({ ...s, who: 'B' as const })), ...sH.map(s => ({ ...s, who: 'H' as const }))]
               : viewMode === 'B' ? sB.map(s => ({ ...s, who: 'B' as const })) : sH.map(s => ({ ...s, who: 'H' as const }))
+            const canLog = key <= todayKey
 
             return (
               <div key={key} className="w-[88px] flex-shrink-0">
@@ -137,6 +146,7 @@ export default function PlanningPage() {
                       ? (s.who === 'B' ? 'border-l-2 border-l-teal rounded-l-none' : 'border-l-2 border-l-violet rounded-l-none')
                       : ''
                     const ownerColor = s.who === 'B' ? 'text-teal' : 'text-violet'
+                    const hasResult = !!s.result
                     return (
                       <div key={i} className={`rounded-sm border px-1.5 py-1 relative group ${discColor} ${stripe}`}>
                         <div className={`text-[10px] font-semibold uppercase tracking-wide ${typeColor}`}>
@@ -148,6 +158,20 @@ export default function PlanningPage() {
                           <div className={`text-[9px] font-semibold mt-0.5 ${ownerColor}`}>
                             {athleteNames[s.who]}
                           </div>
+                        )}
+                        {canLog && (
+                          <button
+                            onClick={() => setResultCtx({
+                              sessionId: s.id,
+                              discipline: s.discipline,
+                              label: `${DISC_LABEL[s.discipline]} — ${format(date, 'EEEE d MMMM', { locale: fr })}`,
+                              existing: s.result,
+                            })}
+                            className={`mt-1 w-full text-[9px] rounded-[4px] py-0.5 flex items-center justify-center gap-0.5 cursor-pointer border ${hasResult ? 'bg-teal text-white border-teal' : 'bg-white/70 text-[#6B7B6B] border-[#E4E8E4]'}`}
+                          >
+                            <i className={`ti ${hasResult ? 'ti-check' : 'ti-stopwatch'} text-[10px]`} />
+                            {hasResult ? 'Résultat' : 'Log'}
+                          </button>
                         )}
                         {viewMode !== 'T' && (
                           <button
@@ -185,6 +209,24 @@ export default function PlanningPage() {
           addMutation.mutate(payload)
           showToast('Séance ajoutée')
         }}
+      />
+
+      <SessionResultModal
+        open={!!resultCtx}
+        onClose={() => setResultCtx(null)}
+        sessionLabel={resultCtx?.label ?? ''}
+        discipline={resultCtx?.discipline ?? 'run'}
+        existing={resultCtx?.existing}
+        onSave={(payload) => {
+          if (!resultCtx) return
+          saveResultMutation.mutate({ sessionId: resultCtx.sessionId, ...payload })
+          showToast('Résultat enregistré')
+        }}
+        onDelete={resultCtx?.existing ? () => {
+          if (!resultCtx) return
+          removeResultMutation.mutate(resultCtx.sessionId)
+          showToast('Résultat supprimé')
+        } : undefined}
       />
     </div>
   )

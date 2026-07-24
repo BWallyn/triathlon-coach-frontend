@@ -5,6 +5,7 @@ import DashboardPage from './components/dashboard/DashboardPage'
 import PlanningPage from './components/planning/PlanningPage'
 import NutritionPage from './components/nutrition/NutritionPage'
 import CoursesPage from './components/courses/CoursesPage'
+import PerformancePage from './components/performance/PerformancePage'
 import SantePage from './components/health/SantePage'
 import RecipesPage from './components/nutrition/RecipesPage'
 import CoachPage from './components/coach/CoachPage'
@@ -24,6 +25,7 @@ export default function App() {
         {activePage === 'recipes' && <RecipesPage />}
         {activePage === 'coach' && <CoachPage />}
         {activePage === 'races' && <RacesPage />}
+        {activePage === 'performance' && <PerformancePage />}
         <BottomNav />
       </div>
     </ToastProvider>
